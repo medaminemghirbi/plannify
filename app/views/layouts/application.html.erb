@@ -1,19 +1,460 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Plannify</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plannify Gym System - <%= content_for(:title) || "Dashboard" %></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
-
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <style>
+      .theme-dark {
+        background: #020617;
+        color: #e2e8f0;
+      }
+
+      .theme-dark .admin-surface {
+        background: #0f172a;
+        border-color: #1e293b;
+        color: #e2e8f0;
+      }
+
+      .theme-dark .admin-muted {
+        color: #94a3b8;
+      }
+
+      .theme-dark .admin-sidebar-link {
+        color: #cbd5e1;
+      }
+
+      .theme-dark .admin-sidebar-link:hover {
+        background: #1e293b;
+        color: #67e8f9;
+      }
+
+      .admin-sidebar-link.active {
+        background: linear-gradient(90deg, #cffafe 0%, #ecfeff 100%);
+        color: #0f172a;
+        border-color: #67e8f9;
+        box-shadow: 0 8px 22px -16px rgba(34, 211, 238, 0.95);
+      }
+
+      .theme-dark .admin-sidebar-link.active {
+        background: linear-gradient(90deg, #164e63 0%, #082f49 100%);
+        color: #ecfeff;
+        border-color: #0891b2;
+      }
+
+      .admin-nav-section {
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+      }
+
+      .theme-dark .admin-nav-section {
+        border-color: #1e293b;
+        background: #0b1221;
+      }
+
+      #global-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(2, 6, 23, 0.35);
+        backdrop-filter: blur(2px);
+      }
+
+      #global-loader.active {
+        display: flex;
+      }
+
+      .loader-ring {
+        width: 52px;
+        height: 52px;
+        border: 4px solid rgba(255, 255, 255, 0.35);
+        border-top-color: #22d3ee;
+        border-radius: 50%;
+        animation: plannify-spin 0.8s linear infinite;
+      }
+
+      @keyframes plannify-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      #toast-container {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: min(420px, calc(100vw - 24px));
+      }
+
+      .toast-item {
+        border-radius: 12px;
+        border: 1px solid;
+        padding: 10px 12px;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 10px 30px -20px rgba(15, 23, 42, 0.9);
+        animation: toast-in 0.22s ease-out;
+      }
+
+      .toast-notice {
+        background: #ecfeff;
+        border-color: #a5f3fc;
+        color: #155e75;
+      }
+
+      .toast-alert,
+      .toast-error {
+        background: #fff1f2;
+        border-color: #fecdd3;
+        color: #9f1239;
+      }
+
+      @keyframes toast-in {
+        from {
+          opacity: 0;
+          transform: translateY(-8px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+    </style>
+    <%= yield :head %>
     <%= javascript_importmap_tags %>
   </head>
+  <body id="app-shell" class="min-h-screen bg-gradient-to-br from-slate-100 via-cyan-50 to-emerald-100 text-slate-900" style="font-family: 'Manrope', sans-serif;">
+    <% admin_shell = user_signed_in? && (current_user.admin? || current_user.superadmin?) %>
 
-  <body>
-    <main class="container mx-auto mt-28 px-5 flex">
-      <%= yield %>
-    </main>
+
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+    <div id="flash-messages" class="hidden">
+      <% flash.each do |key, value| %>
+        <div data-flash-level="<%= key %>" data-flash-message="<%= value %>"></div>
+      <% end %>
+    </div>
+
+    <% if admin_shell %>
+      <div class="min-h-screen lg:grid lg:grid-cols-[270px_1fr]">
+        <aside class="admin-surface border-r border-slate-200 bg-white px-4 py-6 lg:px-5">
+          <%= link_to dashboard_path, class: "mb-7 flex items-center gap-3 rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-900 to-cyan-900 px-3 py-3 text-white" do %>
+            <%= image_tag "plannify-logo.svg", alt: "Plannify logo", class: "h-10 w-10 rounded-xl border border-white/20" %>
+            <div>
+              <p class="text-base font-extrabold tracking-tight">Plannify Gym</p>
+              <p class="text-xs text-cyan-100">Control Center</p>
+            </div>
+          <% end %>
+
+          <nav class="space-y-4">
+            <% if current_user.superadmin? %>
+              <section class="admin-nav-section rounded-2xl p-3">
+                <p class="admin-muted mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.12em]">Superadmin</p>
+                <div class="space-y-1.5 text-sm font-semibold">
+                  <% super_dashboard_active = current_page?(dashboard_path) %>
+                  <%= link_to dashboard_path, class: "admin-sidebar-link #{super_dashboard_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-base leading-none">🧠</span>
+                    <span class="font-semibold tracking-tight">Command Dashboard</span>
+                  <% end %>
+
+                  <% admins_active = current_page?(admins_path) %>
+                  <%= link_to admins_path, class: "admin-sidebar-link #{admins_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-base leading-none">👑</span>
+                    <span class="font-semibold tracking-tight">Manage Admins</span>
+                  <% end %>
+                </div>
+              </section>
+            <% else %>
+              <section class="admin-nav-section rounded-2xl p-3">
+                <p class="admin-muted mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.12em]">RH</p>
+                <div class="space-y-1.5 text-sm font-semibold">
+                  <% coach_active = current_page?(coaches_path) %>
+                  <%= link_to coaches_path, class: "admin-sidebar-link #{coach_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a4 4 0 100 8 4 4 0 000-8z" /><path fill-rule="evenodd" d="M2 16a8 8 0 1116 0H2z" clip-rule="evenodd" /></svg>
+                    </span>
+                    <span class="font-semibold tracking-tight">Coaches</span>
+                  <% end %>
+
+                  <% client_active = current_page?(clients_path) %>
+                  <%= link_to clients_path, class: "admin-sidebar-link #{client_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a3 3 0 100 6 3 3 0 000-6z" /><path d="M4 8a2 2 0 114 0 2 2 0 01-4 0zM12 8a2 2 0 114 0 2 2 0 01-4 0z" /><path fill-rule="evenodd" d="M2 16a6 6 0 1112 0H2zm10 0a5.98 5.98 0 012-4.472A5.98 5.98 0 0118 16h-6z" clip-rule="evenodd" /></svg>
+                    </span>
+                    <span class="font-semibold tracking-tight">Clients</span>
+                  <% end %>
+
+                  <% groups_active = current_page?(training_groups_path) %>
+                  <%= link_to training_groups_path, class: "admin-sidebar-link #{groups_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 10a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd" /></svg>
+                    </span>
+                    <span class="font-semibold tracking-tight">Training Groups</span>
+                  <% end %>
+
+                  <% statistics_active = current_page?(statistics_path) %>
+                  <%= link_to statistics_path, class: "admin-sidebar-link #{statistics_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5H2v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9H8V7zM14 3a1 1 0 011-1h2a1 1 0 011 1v13h-4V3z"/></svg>
+                    </span>
+                    <span class="font-semibold tracking-tight">Statistics</span>
+                  <% end %>
+                </div>
+              </section>
+
+              <section class="admin-nav-section rounded-2xl p-3">
+                <p class="admin-muted mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.12em]">Planning</p>
+                <div class="space-y-1.5 text-sm font-semibold">
+                  <% planning_active = current_page?(planning_sessions_path) %>
+                  <%= link_to planning_sessions_path, class: "admin-sidebar-link #{planning_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm10 8H4v6h12v-6z" clip-rule="evenodd" /></svg>
+                    </span>
+                    <span class="font-semibold tracking-tight">Planning</span>
+                  <% end %>
+                </div>
+              </section>
+
+              <section class="admin-nav-section rounded-2xl p-3">
+                <p class="admin-muted mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.12em]">Paiement</p>
+                <div class="space-y-1.5 text-sm font-semibold">
+                  <% payments_active = current_page?(payments_path) %>
+                  <%= link_to payments_path, class: "admin-sidebar-link #{payments_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v2H2V5z" /><path d="M2 9h16v6a2 2 0 01-2 2H4a2 2 0 01-2-2V9zm3 2a1 1 0 000 2h3a1 1 0 100-2H5z" /></svg>
+                    </span>
+                    <span class="font-semibold tracking-tight">Payments</span>
+                  <% end %>
+                </div>
+              </section>
+
+              <section class="admin-nav-section rounded-2xl p-3">
+                <p class="admin-muted mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.12em]">Resource</p>
+                <div class="space-y-1.5 text-sm font-semibold">
+                  <% gyms_active = current_page?(gyms_path) %>
+                  <%= link_to gyms_path, class: "admin-sidebar-link #{gyms_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-base leading-none">🏋️</span>
+                    <span class="font-semibold tracking-tight">Manage Gyms</span>
+                  <% end %>
+
+                  <% documents_active = current_page?(documents_path) %>
+                  <%= link_to documents_path, class: "admin-sidebar-link #{documents_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-base leading-none">📄</span>
+                    <span class="font-semibold tracking-tight">Documents</span>
+                  <% end %>
+                </div>
+              </section>
+            <% end %>
+          </nav>
+        </aside>
+
+        <div class="min-h-screen">
+          <header class="admin-surface sticky top-0 z-30 border-b border-white/60 bg-white/80 px-4 py-3 backdrop-blur-lg sm:px-6 lg:px-8">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <%= image_tag "plannify-logo.svg", alt: "Plannify logo", class: "h-9 w-9 rounded-lg" %>
+                <div>
+                  <p class="text-sm font-extrabold tracking-tight text-slate-900">Plannify Gym System</p>
+                  <p class="admin-muted text-xs">Administration</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 sm:gap-3">
+                <button type="button" id="toggle-theme" class="admin-surface inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-100" title="Dark mode">
+                  <span aria-hidden="true">◐</span>
+                </button>
+
+                <button type="button" class="admin-surface inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-100" title="Notifications (coming soon)">
+                  <span aria-hidden="true">🔔</span>
+                </button>
+
+                <div class="admin-surface flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5">
+                  <div class="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-100 text-xs font-bold text-cyan-800">
+                    <%= current_user.full_name.to_s.first&.upcase || "U" %>
+                  </div>
+                  <div class="hidden sm:block">
+                    <p class="text-xs font-bold text-slate-800"><%= current_user.full_name %></p>
+                    <p class="admin-muted text-[11px]"><%= current_user.role %></p>
+                  </div>
+                </div>
+
+                <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700" %>
+              </div>
+            </div>
+          </header>
+
+          <main class="mx-auto w-full px-4 py-8 sm:px-6 lg:px-8">
+            <%= yield %>
+          </main>
+        </div>
+      </div>
+    <% else %>
+      <header class="sticky top-0 z-30 border-b border-white/60 bg-white/70 backdrop-blur-lg">
+        <nav class="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+          <div class="flex items-center gap-2 text-xl font-extrabold tracking-tight text-slate-900">
+            <%= image_tag "plannify-logo.svg", alt: "Plannify logo", class: "h-9 w-9 rounded-lg" %>
+            <%= link_to "Plannify Gym System", root_path, class: "transition hover:text-cyan-700" %>
+          </div>
+          <div class="flex items-center gap-3 text-sm">
+            <% if user_signed_in? %>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-slate-600"><%= current_user.full_name %> (<%= current_user.role %>)</span>
+              <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "rounded-full bg-slate-900 px-4 py-2 font-semibold text-white transition hover:bg-slate-700" %>
+            <% else %>
+              <%= link_to "Sign in", new_user_session_path, class: "rounded-full px-3 py-1.5 font-semibold text-slate-700 transition hover:bg-slate-100" %>
+              <%= link_to "Sign up", new_user_registration_path, class: "rounded-full bg-cyan-700 px-4 py-2 font-semibold text-white transition hover:bg-cyan-600" %>
+            <% end %>
+          </div>
+        </nav>
+      </header>
+
+      <main class="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <%= yield %>
+      </main>
+    <% end %>
+
+    <footer class="mx-auto w-full px-4 pb-8 text-sm text-slate-500 sm:px-6 lg:px-8">
+      Plannify Gym System &copy; <%= Date.current.year %>
+    </footer>
+
+    <script>
+      (function() {
+        if (window.__plannifyUiInit) return;
+        window.__plannifyUiInit = true;
+
+        var pendingLoads = 0;
+        var forceHideTimer = null;
+
+        function loaderElement() {
+          return document.getElementById("global-loader");
+        }
+
+        function showLoader() {
+          var loader = loaderElement();
+          if (!loader) return;
+          loader.classList.add("active");
+
+          // Safety net: never leave the UI blocked forever.
+          if (forceHideTimer) clearTimeout(forceHideTimer);
+          forceHideTimer = setTimeout(function() {
+            pendingLoads = 0;
+            hideLoader();
+          }, 12000);
+        }
+
+        function hideLoader() {
+          var loader = loaderElement();
+          if (!loader) return;
+          loader.classList.remove("active");
+
+          if (forceHideTimer) {
+            clearTimeout(forceHideTimer);
+            forceHideTimer = null;
+          }
+        }
+
+        function beginLoad() {
+          pendingLoads += 1;
+          showLoader();
+        }
+
+        function endLoad() {
+          pendingLoads = Math.max(0, pendingLoads - 1);
+          if (pendingLoads === 0) hideLoader();
+        }
+
+        function toastClass(level) {
+          if (level === "alert" || level === "error") return "toast-alert";
+          return "toast-notice";
+        }
+
+        function showToast(message, level) {
+          if (!message) return;
+          var container = document.getElementById("toast-container");
+          if (!container) return;
+
+          var toast = document.createElement("div");
+          toast.className = "toast-item " + toastClass(level || "notice");
+          toast.textContent = message;
+          container.appendChild(toast);
+
+          setTimeout(function() {
+            toast.style.opacity = "0";
+            toast.style.transform = "translateY(-6px)";
+            toast.style.transition = "all 0.2s ease";
+            setTimeout(function() {
+              if (toast.parentNode) toast.parentNode.removeChild(toast);
+            }, 200);
+          }, 3400);
+        }
+
+        window.showToast = showToast;
+
+        function renderFlashToasts() {
+          var flashContainer = document.getElementById("flash-messages");
+          if (!flashContainer) return;
+
+          Array.from(flashContainer.children).forEach(function(node) {
+            if (node.dataset.shown === "true") return;
+            node.dataset.shown = "true";
+            showToast(node.dataset.flashMessage, node.dataset.flashLevel);
+          });
+        }
+
+        document.addEventListener("turbo:before-visit", beginLoad);
+        document.addEventListener("turbo:submit-start", beginLoad);
+        document.addEventListener("turbo:before-fetch-request", beginLoad);
+        document.addEventListener("turbo:load", endLoad);
+        document.addEventListener("turbo:render", endLoad);
+        document.addEventListener("turbo:submit-end", endLoad);
+        document.addEventListener("turbo:frame-load", endLoad);
+        document.addEventListener("turbo:fetch-request-error", endLoad);
+        document.addEventListener("turbo:before-cache", hideLoader);
+
+        // Fallbacks for non-Turbo loads/back-forward cache restores.
+        window.addEventListener("load", hideLoader);
+        window.addEventListener("pageshow", hideLoader);
+        document.addEventListener("readystatechange", function() {
+          if (document.readyState === "complete") hideLoader();
+        });
+
+        document.addEventListener("turbo:load", function() {
+          // Ensure loader is cleared even if an intermediate event was missed.
+          pendingLoads = 0;
+          hideLoader();
+
+          var body = document.getElementById("app-shell");
+          var toggle = document.getElementById("toggle-theme");
+          if (body) {
+            var savedTheme = localStorage.getItem("plannify-theme");
+            if (savedTheme === "dark") {
+              body.classList.add("theme-dark");
+            }
+          }
+
+          if (toggle && toggle.dataset.bound !== "true") {
+            toggle.dataset.bound = "true";
+            toggle.addEventListener("click", function() {
+              body.classList.toggle("theme-dark");
+              localStorage.setItem("plannify-theme", body.classList.contains("theme-dark") ? "dark" : "light");
+            });
+          }
+
+          renderFlashToasts();
+        });
+      })();
+    </script>
   </body>
 </html>

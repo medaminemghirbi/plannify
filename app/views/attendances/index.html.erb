@@ -1,0 +1,42 @@
+<div class="space-y-5">
+  <section class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">Attendance</h1>
+    <% if current_user.coach? || current_user.admin? || current_user.superadmin? %>
+      <%= link_to "Record attendance", new_attendance_path, class: "rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600" %>
+    <% end %>
+  </section>
+
+  <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="bg-slate-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+          <tr>
+            <th class="px-4 py-3">Date</th>
+            <th class="px-4 py-3">Group</th>
+            <th class="px-4 py-3">Client</th>
+            <th class="px-4 py-3">Status</th>
+            <th class="px-4 py-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <% @attendances.each do |attendance| %>
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-3 font-semibold text-slate-900"><%= attendance.date %></td>
+              <td class="px-4 py-3 text-slate-600"><%= attendance.training_group.name %></td>
+              <td class="px-4 py-3 text-slate-600"><%= attendance.client.full_name %></td>
+              <td class="px-4 py-3">
+                <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700"><%= attendance.status %></span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex flex-wrap gap-2">
+                  <%= link_to "Edit", edit_attendance_path(attendance), class: "rounded-full border border-cyan-200 px-3 py-1 font-semibold text-cyan-700 transition hover:bg-cyan-50" %>
+                  <%= button_to "Delete", attendance_path(attendance), method: :delete, data: { turbo_confirm: "Delete this attendance entry?" }, class: "rounded-full border border-rose-200 px-3 py-1 font-semibold text-rose-700 transition hover:bg-rose-50" %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

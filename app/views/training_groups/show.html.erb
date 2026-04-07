@@ -1,0 +1,167 @@
+<div class="mx-auto max-w-6xl space-y-6">
+  <section class="relative overflow-hidden rounded-[2rem] border border-cyan-100 bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950 text-white shadow-[0_24px_80px_-28px_rgba(2,132,199,0.55)]">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.25),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.2),transparent_30%)]"></div>
+    <div class="relative flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-start lg:justify-between">
+      <div class="max-w-2xl space-y-4">
+        <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100 backdrop-blur">
+          Training group details
+        </div>
+        <div class="space-y-2">
+          <h1 class="text-3xl font-black tracking-tight sm:text-4xl"><%= @training_group.name %></h1>
+          <p class="max-w-xl text-sm leading-6 text-slate-300 sm:text-base">
+            Manage the assigned coach and the client membership for this group from one place.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <% if current_user.admin? || current_user.superadmin? %>
+            <%= link_to edit_training_group_path(@training_group), class: "inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-50" do %>
+              <span>Edit group</span>
+            <% end %>
+          <% end %>
+          <%= link_to training_groups_path, class: "inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10" do %>
+            <span>Back to groups</span>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="grid w-full gap-3 sm:grid-cols-3 lg:w-[420px] lg:grid-cols-1">
+        <article class="rounded-2xl border border-white/10 bg-white/8 p-4 backdrop-blur">
+          <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-cyan-100">Gym</p>
+          <p class="mt-2 text-base font-semibold text-white"><%= @training_group.gym.name %></p>
+          <p class="text-sm text-slate-300"><%= @training_group.gym.address.presence || "No address provided" %></p>
+        </article>
+        <article class="rounded-2xl border border-white/10 bg-white/8 p-4 backdrop-blur">
+          <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-cyan-100">Coach</p>
+          <% if @training_group.coach %>
+            <p class="mt-2 text-base font-semibold text-white"><%= @training_group.coach.full_name %></p>
+            <p class="text-sm text-slate-300"><%= @training_group.coach.email %></p>
+            <p class="text-sm text-slate-300"><%= @training_group.coach.phone_number.presence || "No phone number" %></p>
+          <% else %>
+            <p class="mt-2 text-base font-semibold text-white">Unassigned</p>
+          <% end %>
+        </article>
+        <article class="rounded-2xl border border-white/10 bg-white/8 p-4 backdrop-blur">
+          <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-cyan-100">Members</p>
+          <p class="mt-2 text-3xl font-black tracking-tight text-white"><%= @member_count %></p>
+          <p class="text-sm text-slate-300">Capacity <%= @training_group.capacity.presence || "-" %></p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+    <div class="space-y-6">
+      <section class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-extrabold tracking-tight text-slate-900">Members</h2>
+            <p class="mt-1 text-sm text-slate-500"><%= @member_count %> client<%= "s" unless @member_count == 1 %> enrolled in this group.</p>
+          </div>
+          <div class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+            Live roster
+          </div>
+        </div>
+
+        <% if @members.any? %>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <% @members.each do |client| %>
+              <% membership = @membership_by_client_id[client.id] %>
+              <article class="group rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 transition hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-md">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex min-w-0 items-center gap-3">
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-600 to-sky-500 text-sm font-black text-white shadow-sm">
+                      <%= client.full_name.split.map(&:first).first(2).join.upcase %>
+                    </div>
+                    <div class="min-w-0">
+                      <p class="truncate text-sm font-bold text-slate-900"><%= client.full_name %></p>
+                      <p class="truncate text-xs text-slate-500"><%= client.email %></p>
+                    </div>
+                  </div>
+                  <span class="inline-flex shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-emerald-700">
+                    Active
+                  </span>
+                </div>
+
+                <div class="mt-4 flex items-center justify-between gap-3">
+                  <div class="text-xs text-slate-500">
+                    Joined <%= membership.created_at.strftime("%d %b %Y") %>
+                  </div>
+                  <% if current_user.admin? || current_user.superadmin? %>
+                    <%= button_to remove_member_training_group_path(@training_group, membership_id: membership.id),
+                      method: :delete,
+                      class: "inline-flex items-center rounded-full border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 hover:border-rose-300",
+                      data: { turbo_confirm: "Remove #{client.full_name} from this group?" } do %>
+                      Remove
+                    <% end %>
+                  <% else %>
+                    <span class="text-xs text-slate-400">-</span>
+                  <% end %>
+                </div>
+              </article>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+            <p class="text-base font-semibold text-slate-900">No members yet</p>
+            <p class="mt-1 text-sm text-slate-500">Use the panel on the right to add the first client to this group.</p>
+          </div>
+        <% end %>
+      </section>
+    </div>
+
+    <aside class="space-y-6">
+      <section class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-extrabold tracking-tight text-slate-900">Add client</h2>
+            <p class="mt-1 text-sm text-slate-500">Assign an available client to this group.</p>
+          </div>
+          <div class="rounded-2xl bg-cyan-50 px-3 py-2 text-right">
+            <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-cyan-700">Available</p>
+            <p class="text-lg font-black text-cyan-950"><%= @available_clients.count %></p>
+          </div>
+        </div>
+
+        <% if @available_clients.any? %>
+          <%= form_with url: add_member_training_group_path(@training_group), method: :post, local: true, class: "mt-5 space-y-4" do |f| %>
+            <div>
+              <%= f.label :client_id, "Choose client", class: "mb-2 block text-sm font-semibold text-slate-700" %>
+              <%= f.select :client_id,
+                options_from_collection_for_select(@available_clients, :id, :full_name),
+                { prompt: "Select a client" },
+                class: "w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:bg-white focus:ring-4 focus:ring-cyan-100"
+              %>
+            </div>
+
+            <div>
+              <%= f.submit "Add to group", class: "inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-cyan-600 to-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:from-cyan-700 hover:to-sky-700" %>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+            <p class="text-sm font-semibold text-slate-900">No available clients</p>
+            <p class="mt-1 text-sm text-slate-500">Every client in this gym is already in the group.</p>
+          </div>
+        <% end %>
+      </section>
+
+      <section class="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6">
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Overview</p>
+        <div class="mt-4 grid gap-3 text-sm text-slate-700">
+          <div class="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
+            <span>Group</span>
+            <span class="font-semibold text-slate-900"><%= @training_group.name %></span>
+          </div>
+          <div class="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
+            <span>Coach</span>
+            <span class="font-semibold text-slate-900"><%= @training_group.coach&.full_name || "Unassigned" %></span>
+          </div>
+          <div class="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
+            <span>Members / Capacity</span>
+            <span class="font-semibold text-slate-900"><%= @member_count %> / <%= @training_group.capacity.presence || "-" %></span>
+          </div>
+        </div>
+      </section>
+    </aside>
+  </section>
+</div>

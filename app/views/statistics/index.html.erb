@@ -1,0 +1,131 @@
+<% content_for :head do %>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<% end %>
+
+<div class="space-y-5">
+  <section class="rounded-3xl bg-slate-900 px-6 py-7 text-white shadow-xl">
+    <h1 class="text-3xl font-extrabold tracking-tight">Statistics Dashboard 📊</h1>
+    <p class="mt-2 text-slate-200">Operational and payment insights for your gyms.</p>
+  </section>
+
+  <section class="grid gap-4 lg:grid-cols-2">
+    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <h2 class="mb-3 text-lg font-bold text-slate-900">Monthly Revenue (last 6 months · <%= @statistics_currency %>)</h2>
+      <canvas id="revenueChart" height="130"></canvas>
+    </article>
+
+    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <h2 class="mb-3 text-lg font-bold text-slate-900">Payments by Status</h2>
+      <canvas id="statusChart" height="130"></canvas>
+    </article>
+
+    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <h2 class="mb-3 text-lg font-bold text-slate-900">Clients per Gym</h2>
+      <canvas id="clientsChart" height="130"></canvas>
+    </article>
+
+    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <h2 class="mb-3 text-lg font-bold text-slate-900">Planning Sessions per Gym</h2>
+      <canvas id="sessionsChart" height="130"></canvas>
+    </article>
+  </section>
+</div>
+
+<script>
+  document.addEventListener("turbo:load", function() {
+    if (typeof Chart === "undefined") return;
+
+    var revenueEl = document.getElementById("revenueChart");
+    var statusEl = document.getElementById("statusChart");
+    var clientsEl = document.getElementById("clientsChart");
+    var sessionsEl = document.getElementById("sessionsChart");
+    if (!revenueEl || !statusEl || !clientsEl || !sessionsEl) return;
+
+    var labelsRevenue = <%= raw json_escape(@monthly_revenue_labels.to_json) %>;
+    var valuesRevenue = <%= raw json_escape(@monthly_revenue_values.to_json) %>;
+    var revenueCurrency = <%= raw json_escape(@statistics_currency.to_json) %>;
+
+    var statusData = <%= raw json_escape(@payments_by_status.to_json) %>;
+    var statusLabels = Object.keys(statusData);
+    var statusValues = Object.values(statusData);
+
+    var clientsData = <%= raw json_escape(@clients_per_gym.to_json) %>;
+    var clientsLabels = Object.keys(clientsData);
+    var clientsValues = Object.values(clientsData);
+
+    var sessionsData = <%= raw json_escape(@sessions_per_gym.to_json) %>;
+    var sessionsLabels = Object.keys(sessionsData);
+    var sessionsValues = Object.values(sessionsData);
+
+    new Chart(revenueEl, {
+      type: "line",
+      data: {
+        labels: labelsRevenue,
+        datasets: [{
+          label: "Revenue",
+          data: valuesRevenue,
+          borderColor: "#0891b2",
+          backgroundColor: "rgba(8, 145, 178, 0.2)",
+          fill: true,
+          tension: 0.35
+        }]
+      },
+      options: {
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                var value = context.parsed && context.parsed.y != null ? context.parsed.y : context.raw;
+                return "Revenue: " + value + " " + revenueCurrency;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            ticks: {
+              callback: function(value) {
+                return value + " " + revenueCurrency;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    new Chart(statusEl, {
+      type: "doughnut",
+      data: {
+        labels: statusLabels,
+        datasets: [{
+          data: statusValues,
+          backgroundColor: ["#0ea5e9", "#22c55e", "#f97316", "#ef4444"]
+        }]
+      }
+    });
+
+    new Chart(clientsEl, {
+      type: "bar",
+      data: {
+        labels: clientsLabels,
+        datasets: [{
+          label: "Clients",
+          data: clientsValues,
+          backgroundColor: "#14b8a6"
+        }]
+      }
+    });
+
+    new Chart(sessionsEl, {
+      type: "bar",
+      data: {
+        labels: sessionsLabels,
+        datasets: [{
+          label: "Sessions",
+          data: sessionsValues,
+          backgroundColor: "#6366f1"
+        }]
+      }
+    });
+  });
+</script>

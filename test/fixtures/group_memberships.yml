@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  client_profile: one
+  training_group: one
+  joined_at: 2026-04-07 09:18:19
+
+two:
+  client_profile: two
+  training_group: two
+  joined_at: 2026-04-07 09:18:19

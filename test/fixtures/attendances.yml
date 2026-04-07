@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  client_profile: one
+  training_group: one
+  date: 2026-04-06
+  status: MyString
+
+two:
+  client_profile: two
+  training_group: two
+  date: 2026-04-06
+  status: MyString

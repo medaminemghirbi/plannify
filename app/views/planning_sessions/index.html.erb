@@ -1,0 +1,134 @@
+<% content_for :head do %>
+  <% if current_user.admin? || current_user.superadmin? %>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
+  <% end %>
+<% end %>
+
+<div class="space-y-5">
+  <section class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">Planning Sessions</h1>
+    <% if current_user.coach? || current_user.admin? || current_user.superadmin? %>
+      <%= link_to "New session", new_planning_session_path, class: "rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600" %>
+    <% end %>
+  </section>
+
+  <% if current_user.admin? || current_user.superadmin? %>
+    <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-lg font-bold text-slate-900">Calendar</h2>
+        <p class="text-xs text-slate-500">Month, week, and day views • Coach shown on each session</p>
+      </div>
+      <div
+        id="planning-calendar"
+        class="rounded-xl border border-slate-100 bg-white p-2"
+        data-events="<%= json_escape(@planning_events.to_json) %>">
+      </div>
+    </section>
+  <% end %>
+
+</div>
+
+<% if current_user.admin? || current_user.superadmin? %>
+  <script>
+    document.addEventListener("turbo:load", function() {
+      var calendarEl = document.getElementById("planning-calendar");
+      if (!calendarEl || typeof FullCalendar === "undefined") return;
+
+      if (calendarEl.dataset.initialized === "true") return;
+      calendarEl.dataset.initialized = "true";
+
+      var events = [];
+      try {
+        events = JSON.parse(calendarEl.dataset.events || "[]");
+      } catch (_) {
+        events = [];
+      }
+
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "dayGridMonth",
+        headerToolbar: {
+          left: "prev,next today",
+          center: "title",
+          right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek"
+        },
+        buttonText: {
+          today: "Today",
+          month: "Month",
+          week: "Week",
+          day: "Day",
+          list: "List"
+        },
+        height: "auto",
+        navLinks: true,
+        nowIndicator: true,
+        editable: true,
+        selectable: false,
+        eventDisplay: "block",
+        events: events,
+        eventDrop: persistEventMove,
+        eventResize: persistEventMove,
+        eventDidMount: function(info) {
+          var coach = (info.event.extendedProps && info.event.extendedProps.coach) || "-";
+          var gym = (info.event.extendedProps && info.event.extendedProps.gym) || "-";
+          info.el.title = info.event.title + "\nGym: " + gym + "\nCoach: " + coach;
+        },
+        eventTimeFormat: {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        }
+      });
+
+      function persistEventMove(info) {
+        var event = info.event;
+        if (!event || !event.id) {
+          if (typeof info.revert === "function") info.revert();
+          if (window.showToast) window.showToast("Unable to update this event.", "alert");
+          return;
+        }
+
+        if (!event.end) {
+          if (typeof info.revert === "function") info.revert();
+          if (window.showToast) window.showToast("End time is required.", "alert");
+          return;
+        }
+
+        var csrf = document.querySelector("meta[name='csrf-token']");
+
+        fetch("/planning_sessions/" + event.id, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "X-CSRF-Token": csrf ? csrf.getAttribute("content") : ""
+          },
+          body: JSON.stringify({
+            planning_session: {
+              start_time: event.start ? event.start.toISOString() : null,
+              end_time: event.end ? event.end.toISOString() : null
+            }
+          })
+        }).then(function(response) {
+          if (!response.ok) {
+            return response.json().then(function(payload) {
+              var errorMessage = "Could not move event.";
+              if (payload && payload.errors && payload.errors.length > 0) {
+                errorMessage = payload.errors.join(", ");
+              }
+              throw new Error(errorMessage);
+            }).catch(function() {
+              throw new Error("Could not move event.");
+            });
+          }
+          if (window.showToast) window.showToast("Session updated.", "notice");
+        }).catch(function(error) {
+          if (typeof info.revert === "function") info.revert();
+          if (window.showToast) window.showToast(error.message || "Update failed.", "alert");
+        });
+      }
+
+      calendar.render();
+    });
+  </script>
+<% end %>

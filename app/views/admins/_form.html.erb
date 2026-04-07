@@ -1,0 +1,44 @@
+<%= form_with model: @admin_user, url: @admin_user.persisted? ? admin_path(@admin_user) : admins_path, method: @admin_user.persisted? ? :patch : :post do |f| %>
+  <% if @admin_user.errors.any? %>
+    <div class="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+      <h3 class="text-sm font-bold text-rose-800"><%= pluralize(@admin_user.errors.count, "error") %> prevented saving:</h3>
+      <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-rose-700">
+        <% @admin_user.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-4">
+    <%= f.label :full_name, class: "mb-1 block text-sm font-semibold text-slate-700" %>
+    <%= f.text_field :full_name, required: true, class: "w-full rounded-xl border border-slate-300 px-3 py-2 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring" %>
+  </div>
+
+  <div class="mb-4">
+    <%= f.label :email, class: "mb-1 block text-sm font-semibold text-slate-700" %>
+    <%= f.email_field :email, required: true, class: "w-full rounded-xl border border-slate-300 px-3 py-2 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring" %>
+  </div>
+
+  <div class="mb-4">
+    <%= f.label :phone_number, class: "mb-1 block text-sm font-semibold text-slate-700" %>
+    <%= f.telephone_field :phone_number, class: "w-full rounded-xl border border-slate-300 px-3 py-2 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring" %>
+  </div>
+
+  <div class="mb-4">
+    <%= f.label :password, class: "mb-1 block text-sm font-semibold text-slate-700" %>
+    <%= f.password_field :password, autocomplete: "new-password", class: "w-full rounded-xl border border-slate-300 px-3 py-2 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring" %>
+    <% if @admin_user.persisted? %>
+      <p class="mt-1 text-xs text-slate-500">Leave blank to keep current password.</p>
+    <% end %>
+  </div>
+
+  <div class="mb-5">
+    <%= f.label :password_confirmation, class: "mb-1 block text-sm font-semibold text-slate-700" %>
+    <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "w-full rounded-xl border border-slate-300 px-3 py-2 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring" %>
+  </div>
+
+  <div class="pt-1">
+    <%= f.submit class: "rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700" %>
+  </div>
+<% end %>
