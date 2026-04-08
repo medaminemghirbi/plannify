@@ -7,13 +7,11 @@ class PaymentReceipt < ApplicationRecord
 
   def self.build_snapshot(payment, generated_by)
     client = payment.client
-    gym_rows = client.client_in_gyms.select(:id, :name, :address, :currency)
-    gym_ids = gym_rows.pluck(:id)
-    currency_code = gym_rows.first&.currency || "TND"
+    gym = client.gym
+    gym_ids = gym.present? ? [gym.id] : []
+    currency_code = gym&.currency || "TND"
     coach_rows = User.coaches
-      .joins(:coach_gyms)
-      .where(coach_gyms: { gym_id: gym_ids })
-      .distinct
+      .where(gym_id: gym_ids)
 
     {
       payment: {
@@ -34,14 +32,14 @@ class PaymentReceipt < ApplicationRecord
         phone_number: client.phone_number,
         groups: client.groups.select(:id, :name).map { |group| { id: group.id, name: group.name } }
       },
-      gyms: gym_rows.map { |gym| { id: gym.id, name: gym.name, address: gym.address, currency: gym.currency } },
+      gyms: (gym.present? ? [{ id: gym.id, name: gym.name, address: gym.address, currency: gym.currency }] : []),
       coaches: coach_rows.map do |coach|
         {
           id: coach.id,
           full_name: coach.full_name,
           email: coach.email,
           phone_number: coach.phone_number,
-          gyms: coach.coached_gyms.where(id: gym_ids).pluck(:name)
+          gyms: gym.present? ? [gym.name] : []
         }
       end,
       generated_by: {

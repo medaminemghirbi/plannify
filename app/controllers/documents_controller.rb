@@ -59,7 +59,7 @@ class DocumentsController < ApplicationController
     pdf.text "Plannify Gym - Document Sheet", size: 18, style: :bold
     pdf.move_down 12
     pdf.text "Title: #{@document.title}", size: 12
-    pdf.text "Type: #{@document.kind.humanize}", size: 12
+    pdf.text "Type: #{t("documents.kinds.#{@document.kind}")}", size: 12
     pdf.text "Gym: #{@document.gym.name}", size: 12
     pdf.text "Created by: #{@document.created_by&.full_name || '-'}", size: 12
     pdf.text "Created at: #{I18n.l(@document.created_at, format: :long)}", size: 12
@@ -87,7 +87,7 @@ class DocumentsController < ApplicationController
 
   def load_collections
     @gyms = manageable_gyms.order(:name)
-    @kinds = Document::KINDS.map { |kind| [kind.humanize, kind] }
+    @kinds = Document::KINDS.map { |kind| [t("documents.kinds.#{kind}"), kind] }
   end
 
   def document_params

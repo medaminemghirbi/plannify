@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= I18n.locale %>" dir="<%= rtl_locale? ? 'rtl' : 'ltr' %>">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Plannify Gym System - <%= content_for(:title) || "Dashboard" %></title>
+    <title><%= t("app.system") %> - <%= content_for(:title) || t("nav.items.dashboard") %></title>
+    <link rel="icon" type="image/svg+xml" href="<%= asset_path('plannify-logo.svg') %>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -137,7 +138,7 @@
     <%= yield :head %>
     <%= javascript_importmap_tags %>
   </head>
-  <body id="app-shell" class="min-h-screen bg-gradient-to-br from-slate-100 via-cyan-50 to-emerald-100 text-slate-900" style="font-family: 'Manrope', sans-serif;">
+  <body id="app-shell" data-theme-preference="<%= cookies[:plannify_theme].presence || "light" %>" class="min-h-screen bg-gradient-to-br from-slate-100 via-cyan-50 to-emerald-100 text-slate-900" style="font-family: 'Manrope', sans-serif;">
     <% admin_shell = user_signed_in? && (current_user.admin? || current_user.superadmin?) %>
 
 
@@ -154,106 +155,109 @@
           <%= link_to dashboard_path, class: "mb-7 flex items-center gap-3 rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-900 to-cyan-900 px-3 py-3 text-white" do %>
             <%= image_tag "plannify-logo.svg", alt: "Plannify logo", class: "h-10 w-10 rounded-xl border border-white/20" %>
             <div>
-              <p class="text-base font-extrabold tracking-tight">Plannify Gym</p>
-              <p class="text-xs text-cyan-100">Control Center</p>
+              <p class="text-base font-extrabold tracking-tight"><%= t("app.name") %></p>
+              <p class="text-xs text-cyan-100"><%= t("app.control_center") %></p>
             </div>
           <% end %>
 
           <nav class="space-y-4">
             <% if current_user.superadmin? %>
               <section class="admin-nav-section rounded-2xl p-3">
-                <p class="admin-muted mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.12em]">Superadmin</p>
+                <p class="admin-muted mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.12em]"><%= t("nav.sections.superadmin") %></p>
                 <div class="space-y-1.5 text-sm font-semibold">
                   <% super_dashboard_active = current_page?(dashboard_path) %>
-                  <%= link_to dashboard_path, class: "admin-sidebar-link #{super_dashboard_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                  <%= link_to dashboard_path, class: "admin-sidebar-link #{super_dashboard_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800 #{!current_user.is_enabled? ? 'opacity-50 cursor-not-allowed' : ''}", data: { disabled: !current_user.is_enabled? } do %>
                     <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-base leading-none">🧠</span>
-                    <span class="font-semibold tracking-tight">Command Dashboard</span>
+                    <span class="font-semibold tracking-tight"><%= t("nav.items.command_dashboard") %></span>
+                    <%= sidebar_lock_icon if sidebar_locked? %>
                   <% end %>
 
                   <% admins_active = current_page?(admins_path) %>
-                  <%= link_to admins_path, class: "admin-sidebar-link #{admins_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                  <%= link_to admins_path, class: "admin-sidebar-link #{admins_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800 #{!current_user.is_enabled? ? 'opacity-50 cursor-not-allowed' : ''}", data: { disabled: !current_user.is_enabled? } do %>
                     <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-base leading-none">👑</span>
-                    <span class="font-semibold tracking-tight">Manage Admins</span>
+                    <span class="font-semibold tracking-tight"><%= t("nav.items.manage_admins") %></span>
+                    <%= sidebar_lock_icon if sidebar_locked? %>
                   <% end %>
                 </div>
               </section>
             <% else %>
               <section class="admin-nav-section rounded-2xl p-3">
-                <p class="admin-muted mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.12em]">RH</p>
+                <p class="admin-muted mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.12em]"><%= t("nav.sections.hr") %></p>
                 <div class="space-y-1.5 text-sm font-semibold">
                   <% coach_active = current_page?(coaches_path) %>
-                  <%= link_to coaches_path, class: "admin-sidebar-link #{coach_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                  <%= link_to coaches_path, class: "admin-sidebar-link #{coach_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800 #{!current_user.is_enabled? ? 'opacity-50 cursor-not-allowed' : ''}", data: { disabled: !current_user.is_enabled? } do %>
                     <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a4 4 0 100 8 4 4 0 000-8z" /><path fill-rule="evenodd" d="M2 16a8 8 0 1116 0H2z" clip-rule="evenodd" /></svg>
                     </span>
-                    <span class="font-semibold tracking-tight">Coaches</span>
+                    <span class="font-semibold tracking-tight"><%= t("nav.items.coaches") %></span>
+                    <%= sidebar_lock_icon if sidebar_locked? %>
                   <% end %>
 
                   <% client_active = current_page?(clients_path) %>
-                  <%= link_to clients_path, class: "admin-sidebar-link #{client_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                  <%= link_to clients_path, class: "admin-sidebar-link #{client_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800 #{!current_user.is_enabled? ? 'opacity-50 cursor-not-allowed' : ''}", data: { disabled: !current_user.is_enabled? } do %>
                     <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a3 3 0 100 6 3 3 0 000-6z" /><path d="M4 8a2 2 0 114 0 2 2 0 01-4 0zM12 8a2 2 0 114 0 2 2 0 01-4 0z" /><path fill-rule="evenodd" d="M2 16a6 6 0 1112 0H2zm10 0a5.98 5.98 0 012-4.472A5.98 5.98 0 0118 16h-6z" clip-rule="evenodd" /></svg>
                     </span>
-                    <span class="font-semibold tracking-tight">Clients</span>
+                    <span class="font-semibold tracking-tight"><%= t("nav.items.clients") %></span>
+                    <%= sidebar_lock_icon if sidebar_locked? %>
                   <% end %>
 
                   <% groups_active = current_page?(training_groups_path) %>
-                  <%= link_to training_groups_path, class: "admin-sidebar-link #{groups_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                  <%= link_to training_groups_path, class: "admin-sidebar-link #{groups_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800 #{!current_user.is_enabled? ? 'opacity-50 cursor-not-allowed' : ''}", data: { disabled: !current_user.is_enabled? } do %>
                     <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 10a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd" /></svg>
                     </span>
-                    <span class="font-semibold tracking-tight">Training Groups</span>
+                    <span class="font-semibold tracking-tight"><%= t("nav.items.training_groups") %></span>
+                    <%= sidebar_lock_icon if sidebar_locked? %>
                   <% end %>
 
                   <% statistics_active = current_page?(statistics_path) %>
-                  <%= link_to statistics_path, class: "admin-sidebar-link #{statistics_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                  <%= link_to statistics_path, class: "admin-sidebar-link #{statistics_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800 #{!current_user.is_enabled? ? 'opacity-50 cursor-not-allowed' : ''}", data: { disabled: !current_user.is_enabled? } do %>
                     <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5H2v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9H8V7zM14 3a1 1 0 011-1h2a1 1 0 011 1v13h-4V3z"/></svg>
                     </span>
-                    <span class="font-semibold tracking-tight">Statistics</span>
+                    <span class="font-semibold tracking-tight"><%= t("nav.items.statistics") %></span>
+                    <%= sidebar_lock_icon if sidebar_locked? %>
                   <% end %>
                 </div>
               </section>
 
               <section class="admin-nav-section rounded-2xl p-3">
-                <p class="admin-muted mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.12em]">Planning</p>
+                <p class="admin-muted mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.12em]"><%= t("nav.sections.planning") %></p>
                 <div class="space-y-1.5 text-sm font-semibold">
                   <% planning_active = current_page?(planning_sessions_path) %>
-                  <%= link_to planning_sessions_path, class: "admin-sidebar-link #{planning_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                  <%= link_to planning_sessions_path, class: "admin-sidebar-link #{planning_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800 #{!current_user.is_enabled? ? 'opacity-50 cursor-not-allowed' : ''}", data: { disabled: !current_user.is_enabled? } do %>
                     <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm10 8H4v6h12v-6z" clip-rule="evenodd" /></svg>
                     </span>
-                    <span class="font-semibold tracking-tight">Planning</span>
+                    <span class="font-semibold tracking-tight"><%= t("nav.items.planning") %></span>
+                    <%= sidebar_lock_icon if sidebar_locked? %>
                   <% end %>
                 </div>
               </section>
 
               <section class="admin-nav-section rounded-2xl p-3">
-                <p class="admin-muted mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.12em]">Paiement</p>
+                <p class="admin-muted mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.12em]"><%= t("nav.sections.payments") %></p>
                 <div class="space-y-1.5 text-sm font-semibold">
                   <% payments_active = current_page?(payments_path) %>
-                  <%= link_to payments_path, class: "admin-sidebar-link #{payments_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                  <%= link_to payments_path, class: "admin-sidebar-link #{payments_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800 #{!current_user.is_enabled? ? 'opacity-50 cursor-not-allowed' : ''}", data: { disabled: !current_user.is_enabled? } do %>
                     <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v2H2V5z" /><path d="M2 9h16v6a2 2 0 01-2 2H4a2 2 0 01-2-2V9zm3 2a1 1 0 000 2h3a1 1 0 100-2H5z" /></svg>
                     </span>
-                    <span class="font-semibold tracking-tight">Payments</span>
+                    <span class="font-semibold tracking-tight"><%= t("nav.items.payments") %></span>
+                    <%= sidebar_lock_icon if sidebar_locked? %>
                   <% end %>
                 </div>
               </section>
 
               <section class="admin-nav-section rounded-2xl p-3">
-                <p class="admin-muted mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.12em]">Resource</p>
+                <p class="admin-muted mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.12em]"><%= t("nav.sections.resources") %></p>
                 <div class="space-y-1.5 text-sm font-semibold">
-                  <% gyms_active = current_page?(gyms_path) %>
-                  <%= link_to gyms_path, class: "admin-sidebar-link #{gyms_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
-                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-base leading-none">🏋️</span>
-                    <span class="font-semibold tracking-tight">Manage Gyms</span>
-                  <% end %>
-
                   <% documents_active = current_page?(documents_path) %>
-                  <%= link_to documents_path, class: "admin-sidebar-link #{documents_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800" do %>
+                  <%= link_to documents_path, class: "admin-sidebar-link #{documents_active ? 'active' : ''} flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-slate-700 transition hover:bg-cyan-100 hover:text-cyan-800 #{!current_user.is_enabled? ? 'opacity-50 cursor-not-allowed' : ''}", data: { disabled: !current_user.is_enabled? } do %>
                     <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-base leading-none">📄</span>
-                    <span class="font-semibold tracking-tight">Documents</span>
+                    <span class="font-semibold tracking-tight"><%= t("nav.items.documents") %></span>
+                    <%= sidebar_lock_icon if sidebar_locked? %>
                   <% end %>
                 </div>
               </section>
@@ -267,31 +271,26 @@
               <div class="flex items-center gap-3">
                 <%= image_tag "plannify-logo.svg", alt: "Plannify logo", class: "h-9 w-9 rounded-lg" %>
                 <div>
-                  <p class="text-sm font-extrabold tracking-tight text-slate-900">Plannify Gym System</p>
-                  <p class="admin-muted text-xs">Administration</p>
+                  <p class="text-sm font-extrabold tracking-tight text-slate-900"><%= t("app.system") %></p>
+                  <p class="admin-muted text-xs"><%= t("app.administration") %></p>
                 </div>
               </div>
 
               <div class="flex items-center gap-2 sm:gap-3">
-                <button type="button" id="toggle-theme" class="admin-surface inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-100" title="Dark mode">
-                  <span aria-hidden="true">◐</span>
-                </button>
+                <% if current_user.admin? %>
+                  <% settings_active = current_page?(edit_settings_path) %>
+                  <%= link_to edit_settings_path, class: "admin-surface inline-flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 #{settings_active ? 'ring-2 ring-cyan-500 ring-offset-1' : ''} #{!current_user.is_enabled? ? 'opacity-50 cursor-not-allowed' : ''}", data: { disabled: !current_user.is_enabled? }, title: t("actions.settings") do %>
+                    <span aria-hidden="true">⚙️</span>
+                    <span><%= t("actions.settings") %></span>
+                  <% end %>
+                <% end %>
 
-                <button type="button" class="admin-surface inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-100" title="Notifications (coming soon)">
+                <button type="button" class="admin-surface inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-100" title="<%= t("actions.notifications_soon") %>">
                   <span aria-hidden="true">🔔</span>
                 </button>
 
-                <div class="admin-surface flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5">
-                  <div class="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-100 text-xs font-bold text-cyan-800">
-                    <%= current_user.full_name.to_s.first&.upcase || "U" %>
-                  </div>
-                  <div class="hidden sm:block">
-                    <p class="text-xs font-bold text-slate-800"><%= current_user.full_name %></p>
-                    <p class="admin-muted text-[11px]"><%= current_user.role %></p>
-                  </div>
-                </div>
 
-                <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700" %>
+                <%= button_to t("actions.sign_out"), destroy_user_session_path, method: :delete, class: "rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700" %>
               </div>
             </div>
           </header>
@@ -306,15 +305,15 @@
         <nav class="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div class="flex items-center gap-2 text-xl font-extrabold tracking-tight text-slate-900">
             <%= image_tag "plannify-logo.svg", alt: "Plannify logo", class: "h-9 w-9 rounded-lg" %>
-            <%= link_to "Plannify Gym System", root_path, class: "transition hover:text-cyan-700" %>
+            <%= link_to t("app.system"), root_path, class: "transition hover:text-cyan-700" %>
           </div>
           <div class="flex items-center gap-3 text-sm">
             <% if user_signed_in? %>
               <span class="rounded-full bg-slate-100 px-3 py-1 text-slate-600"><%= current_user.full_name %> (<%= current_user.role %>)</span>
-              <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "rounded-full bg-slate-900 px-4 py-2 font-semibold text-white transition hover:bg-slate-700" %>
+              <%= button_to t("actions.sign_out"), destroy_user_session_path, method: :delete, class: "rounded-full bg-slate-900 px-4 py-2 font-semibold text-white transition hover:bg-slate-700" %>
             <% else %>
-              <%= link_to "Sign in", new_user_session_path, class: "rounded-full px-3 py-1.5 font-semibold text-slate-700 transition hover:bg-slate-100" %>
-              <%= link_to "Sign up", new_user_registration_path, class: "rounded-full bg-cyan-700 px-4 py-2 font-semibold text-white transition hover:bg-cyan-600" %>
+              <%= link_to t("actions.sign_in"), new_user_session_path, class: "rounded-full px-3 py-1.5 font-semibold text-slate-700 transition hover:bg-slate-100" %>
+              <%= link_to t("actions.sign_up"), new_user_registration_path, class: "rounded-full bg-cyan-700 px-4 py-2 font-semibold text-white transition hover:bg-cyan-600" %>
             <% end %>
           </div>
         </nav>
@@ -326,7 +325,7 @@
     <% end %>
 
     <footer class="mx-auto w-full px-4 pb-8 text-sm text-slate-500 sm:px-6 lg:px-8">
-      Plannify Gym System &copy; <%= Date.current.year %>
+      <%= t("app.footer", year: Date.current.year) %>
     </footer>
 
     <script>
@@ -439,8 +438,12 @@
           var toggle = document.getElementById("toggle-theme");
           if (body) {
             var savedTheme = localStorage.getItem("plannify-theme");
-            if (savedTheme === "dark") {
+            var fallbackTheme = body.dataset.themePreference;
+            var activeTheme = savedTheme || fallbackTheme;
+            if (activeTheme === "dark") {
               body.classList.add("theme-dark");
+            } else {
+              body.classList.remove("theme-dark");
             }
           }
 
@@ -448,9 +451,21 @@
             toggle.dataset.bound = "true";
             toggle.addEventListener("click", function() {
               body.classList.toggle("theme-dark");
-              localStorage.setItem("plannify-theme", body.classList.contains("theme-dark") ? "dark" : "light");
+              var currentTheme = body.classList.contains("theme-dark") ? "dark" : "light";
+              localStorage.setItem("plannify-theme", currentTheme);
+              document.cookie = "plannify_theme=" + currentTheme + ";path=/;max-age=31536000;samesite=lax";
             });
           }
+
+          // Handle clicks on disabled navigation links
+          var disabledLinks = document.querySelectorAll('[data-disabled="true"]');
+          disabledLinks.forEach(function(link) {
+            link.addEventListener("click", function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              showToast("Account is locked. Please contact your superadmin for more details.", "alert");
+            });
+          });
 
           renderFlashToasts();
         });

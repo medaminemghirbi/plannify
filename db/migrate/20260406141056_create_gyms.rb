@@ -9,5 +9,7 @@ class CreateGyms < ActiveRecord::Migration[7.1]
     end
 
     add_index :gyms, :name
+    remove_index :gyms, :admin_id
+    add_index :gyms, :admin_id, unique: true
   end
 end

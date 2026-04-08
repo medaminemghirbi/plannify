@@ -58,10 +58,10 @@ class AttendancesController < ApplicationController
   def load_form_collections
     if current_user.superadmin? || current_user.admin?
       @training_groups = TrainingGroup.where(gym: manageable_gyms).order(:name)
-      @clients = User.clients.joins(:client_gyms).where(client_gyms: { gym_id: manageable_gyms.select(:id) }).order(:full_name).distinct
+      @clients = User.clients.where(gym_id: manageable_gyms.select(:id)).order(:full_name)
     elsif current_user.coach?
       @training_groups = TrainingGroup.where(coach: current_user).order(:name)
-      @clients = User.clients.joins(:client_gyms).where(client_gyms: { gym_id: @training_groups.select(:gym_id) }).order(:full_name).distinct
+      @clients = User.clients.where(gym_id: @training_groups.select(:gym_id)).order(:full_name)
     else
       @training_groups = TrainingGroup.none
       @clients = User.where(id: current_user.id)

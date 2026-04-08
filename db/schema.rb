@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_04_07_104000) do
+ActiveRecord::Schema[7.1].define(version: 2026_04_07_141000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -53,22 +53,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_07_104000) do
     t.index ["training_group_id"], name: "index_attendances_on_training_group_id"
   end
 
-  create_table "client_gyms", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.uuid "user_id", null: false
-    t.uuid "gym_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["user_id", "gym_id"], name: "index_client_gyms_on_user_id_and_gym_id", unique: true
-  end
-
-  create_table "coach_gyms", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.uuid "user_id", null: false
-    t.uuid "gym_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["user_id", "gym_id"], name: "index_coach_gyms_on_user_id_and_gym_id", unique: true
-  end
-
   create_table "documents", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "gym_id", null: false
     t.uuid "created_by_id"
@@ -98,7 +82,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_07_104000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "currency", default: "TND", null: false
-    t.index ["admin_id"], name: "index_gyms_on_admin_id"
+    t.boolean "notifications_enabled", default: true, null: false
+    t.decimal "latitude", precision: 10, scale: 6
+    t.decimal "longitude", precision: 10, scale: 6
+    t.index ["admin_id"], name: "index_gyms_on_admin_id", unique: true
     t.index ["name"], name: "index_gyms_on_name"
   end
 
@@ -174,8 +161,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_07_104000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.uuid "gym_id"
+    t.boolean "is_enabled", default: true, null: false
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["gym_id"], name: "index_users_on_gym_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["role"], name: "index_users_on_role"
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
@@ -185,10 +174,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_07_104000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "attendances", "training_groups"
   add_foreign_key "attendances", "users", column: "client_id"
-  add_foreign_key "client_gyms", "gyms"
-  add_foreign_key "client_gyms", "users"
-  add_foreign_key "coach_gyms", "gyms"
-  add_foreign_key "coach_gyms", "users"
   add_foreign_key "documents", "gyms"
   add_foreign_key "documents", "users", column: "created_by_id"
   add_foreign_key "group_memberships", "training_groups"

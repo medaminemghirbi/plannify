@@ -1,8 +1,8 @@
 <div class="space-y-5">
   <section class="flex flex-wrap items-center justify-between gap-3">
-    <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">Attendance</h1>
+    <h1 class="text-3xl font-extrabold tracking-tight text-slate-900"><%= t("attendances.title") %></h1>
     <% if current_user.coach? || current_user.admin? || current_user.superadmin? %>
-      <%= link_to "Record attendance", new_attendance_path, class: "rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600" %>
+      <%= link_to t("attendances.record"), new_attendance_path, class: "rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600" %>
     <% end %>
   </section>
 
@@ -11,11 +11,11 @@
       <table class="min-w-full text-sm">
         <thead class="bg-slate-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
           <tr>
-            <th class="px-4 py-3">Date</th>
-            <th class="px-4 py-3">Group</th>
-            <th class="px-4 py-3">Client</th>
-            <th class="px-4 py-3">Status</th>
-            <th class="px-4 py-3">Actions</th>
+            <th class="px-4 py-3"><%= t("ui.date") %></th>
+            <th class="px-4 py-3"><%= t("ui.groups") %></th>
+            <th class="px-4 py-3"><%= t("ui.client") %></th>
+            <th class="px-4 py-3"><%= t("ui.status") %></th>
+            <th class="px-4 py-3"><%= t("ui.actions") %></th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
@@ -29,8 +29,8 @@
               </td>
               <td class="px-4 py-3">
                 <div class="flex flex-wrap gap-2">
-                  <%= link_to "Edit", edit_attendance_path(attendance), class: "rounded-full border border-cyan-200 px-3 py-1 font-semibold text-cyan-700 transition hover:bg-cyan-50" %>
-                  <%= button_to "Delete", attendance_path(attendance), method: :delete, data: { turbo_confirm: "Delete this attendance entry?" }, class: "rounded-full border border-rose-200 px-3 py-1 font-semibold text-rose-700 transition hover:bg-rose-50" %>
+                  <%= link_to t("actions.edit"), edit_attendance_path(attendance), class: "rounded-full border border-cyan-200 px-3 py-1 font-semibold text-cyan-700 transition hover:bg-cyan-50" %>
+                  <%= button_to t("actions.delete"), attendance_path(attendance), method: :delete, data: { turbo_confirm: t("attendances.delete_confirm") }, class: "rounded-full border border-rose-200 px-3 py-1 font-semibold text-rose-700 transition hover:bg-rose-50" %>
                 </div>
               </td>
             </tr>

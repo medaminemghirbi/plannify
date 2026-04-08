@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   end
 
   resources :gyms
+  resource :settings, only: [:edit, :update], controller: "settings"
   resources :coaches, only: [:index, :new, :create, :edit, :update, :destroy]
   resources :clients, only: [:index, :new, :create, :edit, :update, :destroy]
   resources :training_groups do

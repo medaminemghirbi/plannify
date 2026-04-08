@@ -4,11 +4,9 @@ class ClientsController < ApplicationController
 
   def index
     @clients = User.clients
-      .joins(:client_gyms)
-      .where(client_gyms: { gym_id: manageable_gyms.pluck(:id) })
+      .where(gym_id: manageable_gyms.select(:id))
       .includes(:groups)
       .order(:full_name)
-      .distinct
   end
 
   def new
@@ -22,12 +20,6 @@ class ClientsController < ApplicationController
     @client.confirmed_at = Time.current
 
     if @client.save
-      # Assign client to selected gyms
-      gym_ids = Array(params.dig(:client, :gym_ids)).reject(&:blank?)
-      gym_ids.each do |gym_id|
-        ClientGym.find_or_create_by(user_id: @client.id, gym_id: gym_id)
-      end
-
       redirect_to clients_path, notice: "Client created successfully."
     else
       load_form_collections
@@ -37,18 +29,10 @@ class ClientsController < ApplicationController
 
   def edit
     load_form_collections
-    @client_gym_ids = @client.client_gyms.pluck(:gym_id)
   end
 
   def update
     if @client.update(client_update_params)
-      # Update gym assignments
-      gym_ids = Array(params.dig(:client, :gym_ids)).reject(&:blank?)
-      @client.client_gyms.destroy_all
-      gym_ids.each do |gym_id|
-        ClientGym.find_or_create_by(user_id: @client.id, gym_id: gym_id)
-      end
-
       redirect_to clients_path, notice: "Client updated successfully."
     else
       load_form_collections
@@ -64,7 +48,7 @@ class ClientsController < ApplicationController
   private
 
   def set_client
-    @client = User.clients.find(params[:id])
+    @client = User.clients.where(gym_id: manageable_gyms.select(:id)).find(params[:id])
   end
 
   def load_form_collections
@@ -72,10 +56,10 @@ class ClientsController < ApplicationController
   end
 
   def client_params
-    params.permit(:full_name, :email, :phone_number)
+    params.require(:client).permit(:full_name, :email, :phone_number, :gym_id)
   end
 
   def client_update_params
-    params.permit(:full_name, :email, :phone_number)
+    params.require(:client).permit(:full_name, :email, :phone_number, :gym_id)
   end
 end

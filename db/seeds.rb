@@ -22,7 +22,7 @@ GYM_DATA = {
 	address: "Center City"
 }.freeze
 
-def upsert_user(email:, full_name:, role:, password: nil)
+def upsert_user(email:, full_name:, role:, password: nil, gym: nil)
 	user = User.find_or_initialize_by(email: email)
 	attrs = {
 		full_name: full_name,
@@ -30,6 +30,7 @@ def upsert_user(email:, full_name:, role:, password: nil)
 		phone_number: "+21600000000",
 		confirmed_at: Time.current
 	}
+	attrs[:gym] = gym if gym.present?
 	attrs[:password] = password if password.present?
 	attrs[:password_confirmation] = password if password.present?
 	user.assign_attributes(attrs)
@@ -51,18 +52,6 @@ admin = upsert_user(
 	password: DEFAULT_PASSWORD
 )
 
-coach = upsert_user(
-	email: USERS[2][:email],
-	full_name: USERS[2][:full_name],
-	role: "coach"
-)
-
-client = upsert_user(
-	email: USERS[3][:email],
-	full_name: USERS[3][:full_name],
-	role: "client"
-)
-
 gym = Gym.find_or_create_by!(name: GYM_DATA[:name]) do |g|
 	g.address = GYM_DATA[:address]
 	g.admin = admin
@@ -70,10 +59,20 @@ end
 
 gym.update!(admin: admin) if gym.admin != admin
 
+coach = upsert_user(
+	email: USERS[2][:email],
+	full_name: USERS[2][:full_name],
+	role: "coach",
+	gym: gym
+)
 
+client = upsert_user(
+	email: USERS[3][:email],
+	full_name: USERS[3][:full_name],
+	role: "client",
+	gym: gym
+)
 
-CoachGym.find_or_create_by!(user: coach, gym: gym)
-ClientGym.find_or_create_by!(user: client, gym: gym)
 training_group = TrainingGroup.find_or_create_by!(name: "Morning Cardio", gym: gym) do |group|
 	group.coach = coach
 	group.capacity = 20

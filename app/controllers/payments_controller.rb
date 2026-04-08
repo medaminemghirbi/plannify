@@ -8,7 +8,6 @@ class PaymentsController < ApplicationController
     @selected_month = params[:month].presence
     @selected_year = params[:year].presence&.to_i
     @selected_group_id = params[:group_id].presence
-    @selected_gym_id = params[:gym_id].presence
     @selected_page_size = params[:per_page].presence&.to_i || PAGE_SIZES.first
     @selected_page_size = PAGE_SIZES.include?(@selected_page_size) ? @selected_page_size : PAGE_SIZES.first
     @current_page = params[:page].presence&.to_i || 1
@@ -24,7 +23,7 @@ class PaymentsController < ApplicationController
       .limit(@selected_page_size)
 
     @revenue_total = scope.sum(:amount)
-    @default_currency = Gym.reorder(nil).limit(1).pick(:currency) || "TND"
+    @default_currency = manageable_gyms.reorder(nil).limit(1).pick(:currency) || "TND"
     @available_years = visible_payment_base_scope
       .reorder(nil)
       .pluck(Arel.sql("DISTINCT EXTRACT(YEAR FROM starts_on)::integer"))
@@ -32,8 +31,7 @@ class PaymentsController < ApplicationController
       .reverse
     @month_options = Date::MONTHNAMES.compact.each_with_index.map { |month, index| [month, index + 1] }
     @year_options = (@available_years.presence || [Date.current.year]).sort.reverse
-    @group_options = TrainingGroup.order(:name).pluck(:name, :id)
-    @gym_options = Gym.order(:name).pluck(:name, :id)
+    @group_options = TrainingGroup.where(gym: manageable_gyms).order(:name).pluck(:name, :id)
   end
 
   def new
@@ -79,22 +77,19 @@ class PaymentsController < ApplicationController
 
   def visible_payments
     Payment.where(id: visible_payment_base_scope.select(:id).distinct)
-      .includes(:receipt, :created_by, client: { client_gyms: :gym })
+      .includes(:receipt, :created_by, client: :gym)
   end
 
   def visible_payment_base_scope
     Payment
-      .joins(client: :client_gyms)
+      .joins(:client)
+      .where(users: { gym_id: manageable_gyms.select(:id) })
   end
 
   def filtered_payments_scope
     scope = visible_payments
     scope = scope.where("EXTRACT(MONTH FROM starts_on) = ?", @selected_month.to_i) if @selected_month.present?
     scope = scope.where("EXTRACT(YEAR FROM starts_on) = ?", @selected_year) if @selected_year.present?
-    if @selected_gym_id.present?
-      gym_client_ids = ClientGym.where(gym_id: @selected_gym_id).select(:user_id)
-      scope = scope.where(client_id: gym_client_ids)
-    end
     if @selected_group_id.present?
       group_client_ids = GroupMembership.where(training_group_id: @selected_group_id).select(:client_id)
       scope = scope.where(client_id: group_client_ids)
@@ -104,9 +99,8 @@ class PaymentsController < ApplicationController
 
   def load_collections
     @clients = User.clients
-      .joins(:client_gyms)
+      .where(gym_id: manageable_gyms.select(:id))
       .order(:full_name)
-      .distinct
     @duration_options = [["1 month", 1], ["3 months", 3], ["1 year", 12]]
     @status_options = Payment::STATUSES.map { |status| [status.humanize, status] }
   end

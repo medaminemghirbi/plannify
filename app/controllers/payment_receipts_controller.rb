@@ -25,22 +25,21 @@ class PaymentReceiptsController < ApplicationController
     currency_code = payment_snapshot["currency"] || payment_snapshot[:currency] || gyms_snapshot.first&.dig("currency") || gyms_snapshot.first&.dig(:currency) || "TND"
 
     if coaches_snapshot.blank?
+      client_gym = @payment.client.gym
       coaches_snapshot = User.coaches
-        .joins(:coach_gyms)
-        .where(coach_gyms: { gym_id: @payment.client.client_in_gyms.select(:id) })
-        .distinct
+        .where(gym_id: client_gym&.id)
         .map do |coach|
           {
             "full_name" => coach.full_name,
             "email" => coach.email,
             "phone_number" => coach.phone_number,
-            "gyms" => coach.coached_gyms.where(id: @payment.client.client_in_gyms.select(:id)).pluck(:name)
+            "gyms" => client_gym.present? ? [client_gym.name] : []
           }
         end
     end
 
     if payment_snapshot["currency"].blank? && payment_snapshot[:currency].blank?
-      payment_snapshot = payment_snapshot.merge("currency" => @payment.client.client_in_gyms.first&.currency || "TND")
+      payment_snapshot = payment_snapshot.merge("currency" => @payment.client.gym&.currency || "TND")
     end
 
     require "prawn"
@@ -161,13 +160,13 @@ class PaymentReceiptsController < ApplicationController
 
   def visible_payments
     Payment.where(id: visible_payment_base_scope.select(:id).distinct)
-      .includes(:receipt, :created_by, client: [:groups, { client_gyms: :gym }])
+      .includes(:receipt, :created_by, client: [:groups, :gym])
   end
 
   def visible_payment_base_scope
     Payment
-      .joins(client: :client_gyms)
-      .where(client_gyms: { gym_id: manageable_gyms.select(:id) })
+      .joins(:client)
+      .where(users: { gym_id: manageable_gyms.select(:id) })
   end
 
   def receipt_params

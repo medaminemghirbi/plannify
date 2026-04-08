@@ -8,7 +8,7 @@ class StatisticsController < ApplicationController
 
     gym_names_by_id = gyms.pluck(:id, :name).to_h
 
-    @clients_per_gym = ClientGym.where(gym: gyms_scope)
+    @clients_per_gym = User.clients.where(gym_id: gyms_scope.select(:id))
       .group(:gym_id).count
       .transform_keys { |gym_id| gym_names_by_id[gym_id] || "Unknown" }
 

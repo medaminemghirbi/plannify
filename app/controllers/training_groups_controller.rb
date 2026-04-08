@@ -83,12 +83,12 @@ class TrainingGroupsController < ApplicationController
   def available_clients_for_group
     gym_id = @training_group.gym_id
     already_in_group = @training_group.clients.pluck(:id)
-    User.clients.joins(:client_gyms).where(client_gyms: { gym_id: gym_id }).where.not(id: already_in_group).order(:created_at)
+    User.clients.where(gym_id: gym_id).where.not(id: already_in_group).order(:created_at)
   end
 
   def load_form_collections
     @gyms = manageable_gyms.order(:name)
-    @coaches = User.coaches.joins(:coach_gyms).where(coach_gyms: { gym_id: manageable_gyms.pluck(:id) }).order(:created_at).distinct
+    @coaches = User.coaches.where(gym_id: manageable_gyms.select(:id)).order(:created_at)
   end
 
   def training_group_params

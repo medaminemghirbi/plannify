@@ -7,17 +7,17 @@
 
 <div class="space-y-5">
   <section class="flex flex-wrap items-center justify-between gap-3">
-    <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">Planning Sessions</h1>
+    <h1 class="text-3xl font-extrabold tracking-tight text-slate-900"><%= t("planning_sessions.title") %></h1>
     <% if current_user.coach? || current_user.admin? || current_user.superadmin? %>
-      <%= link_to "New session", new_planning_session_path, class: "rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600" %>
+      <%= link_to t("planning_sessions.new_session"), new_planning_session_path, class: "rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600" %>
     <% end %>
   </section>
 
   <% if current_user.admin? || current_user.superadmin? %>
     <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <div class="mb-3 flex items-center justify-between">
-        <h2 class="text-lg font-bold text-slate-900">Calendar</h2>
-        <p class="text-xs text-slate-500">Month, week, and day views • Coach shown on each session</p>
+        <h2 class="text-lg font-bold text-slate-900"><%= t("planning_sessions.calendar") %></h2>
+        <p class="text-xs text-slate-500"><%= t("planning_sessions.calendar_help") %></p>
       </div>
       <div
         id="planning-calendar"
@@ -53,11 +53,11 @@
           right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek"
         },
         buttonText: {
-          today: "Today",
-          month: "Month",
-          week: "Week",
-          day: "Day",
-          list: "List"
+          today: <%= raw json_escape(t("planning_sessions.today").to_json) %>,
+          month: <%= raw json_escape(t("planning_sessions.month").to_json) %>,
+          week: <%= raw json_escape(t("planning_sessions.week").to_json) %>,
+          day: <%= raw json_escape(t("planning_sessions.day").to_json) %>,
+          list: <%= raw json_escape(t("planning_sessions.list").to_json) %>
         },
         height: "auto",
         navLinks: true,
@@ -71,7 +71,7 @@
         eventDidMount: function(info) {
           var coach = (info.event.extendedProps && info.event.extendedProps.coach) || "-";
           var gym = (info.event.extendedProps && info.event.extendedProps.gym) || "-";
-          info.el.title = info.event.title + "\nGym: " + gym + "\nCoach: " + coach;
+          info.el.title = info.event.title + "\n<%= j t("ui.gym") %>: " + gym + "\n<%= j t("ui.coach") %>: " + coach;
         },
         eventTimeFormat: {
           hour: "2-digit",
@@ -84,13 +84,13 @@
         var event = info.event;
         if (!event || !event.id) {
           if (typeof info.revert === "function") info.revert();
-          if (window.showToast) window.showToast("Unable to update this event.", "alert");
+          if (window.showToast) window.showToast(<%= raw json_escape(t("planning_sessions.unable_to_update").to_json) %>, "alert");
           return;
         }
 
         if (!event.end) {
           if (typeof info.revert === "function") info.revert();
-          if (window.showToast) window.showToast("End time is required.", "alert");
+          if (window.showToast) window.showToast(<%= raw json_escape(t("planning_sessions.end_time_required").to_json) %>, "alert");
           return;
         }
 
@@ -112,19 +112,19 @@
         }).then(function(response) {
           if (!response.ok) {
             return response.json().then(function(payload) {
-              var errorMessage = "Could not move event.";
+              var errorMessage = <%= raw json_escape(t("planning_sessions.could_not_move").to_json) %>;
               if (payload && payload.errors && payload.errors.length > 0) {
                 errorMessage = payload.errors.join(", ");
               }
               throw new Error(errorMessage);
             }).catch(function() {
-              throw new Error("Could not move event.");
+              throw new Error(<%= raw json_escape(t("planning_sessions.could_not_move").to_json) %>);
             });
           }
-          if (window.showToast) window.showToast("Session updated.", "notice");
+          if (window.showToast) window.showToast(<%= raw json_escape(t("planning_sessions.updated").to_json) %>, "notice");
         }).catch(function(error) {
           if (typeof info.revert === "function") info.revert();
-          if (window.showToast) window.showToast(error.message || "Update failed.", "alert");
+          if (window.showToast) window.showToast(error.message || <%= raw json_escape(t("planning_sessions.update_failed").to_json) %>, "alert");
         });
       }
 
