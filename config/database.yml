@@ -79,6 +79,6 @@ test:
 #
 production:
   <<: *default
-  database: plannify_production
-  username: plannify
+  database: plannify_db
+  username: plannify_db_user
   password: <%= ENV["PLANNIFY_DATABASE_PASSWORD"] %>
