@@ -71,3 +71,4 @@ end
 gem "tailwindcss-rails", "~> 4.4"
 gem "devise"
 gem "prawn"
+gem 'matrix'
