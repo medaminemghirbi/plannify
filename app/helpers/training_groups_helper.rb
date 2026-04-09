@@ -1,0 +1,2 @@
+module TrainingGroupsHelper
+end

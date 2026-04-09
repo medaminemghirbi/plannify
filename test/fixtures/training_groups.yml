@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  gym: one
+  coach_profile: one
+  capacity: 1
+
+two:
+  name: MyString
+  gym: two
+  coach_profile: two
+  capacity: 1

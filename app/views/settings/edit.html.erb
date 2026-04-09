@@ -1,0 +1,224 @@
+<% content_for :title, t("actions.settings") %>
+<% maps_api_key = ENV["GOOGLE_MAPS_API_KEY"].presence || Rails.application.credentials.dig(:google, :maps_api_key).presence %>
+
+<% if maps_api_key.present? %>
+  <% content_for :head do %>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=<%= maps_api_key %>&callback=initGymSettingsMap"></script>
+  <% end %>
+<% end %>
+
+<section class="mx-auto max-w-3xl">
+  <div class="mb-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <h1 class="text-2xl font-extrabold tracking-tight text-slate-900"><%= t("actions.settings") %></h1>
+    <p class="mt-1 text-sm text-slate-500"><%= t("settings.subtitle") %></p>
+  </div>
+
+  <%= form_with model: @gym, url: settings_path, method: :patch, class: "rounded-3xl border border-slate-200 bg-white p-6 shadow-sm" do |f| %>
+    <% if @gym.errors.any? %>
+      <div class="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+        <h3 class="text-sm font-bold text-rose-800"><%= pluralize(@gym.errors.count, "error") %> prevented saving:</h3>
+        <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-rose-700">
+          <% @gym.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <%= f.label :name, t("ui.name"), class: "mb-1 block text-sm font-semibold text-slate-700" %>
+        <%= f.text_field :name, required: true, class: "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring" %>
+      </div>
+
+      <div>
+        <%= f.label :currency, class: "mb-1 block text-sm font-semibold text-slate-700" %>
+        <%= f.select :currency, options_for_select(money_currency_options, @gym.currency), {}, class: "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring" %>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <%= f.label :address, class: "mb-1 block text-sm font-semibold text-slate-700" %>
+      <%= f.text_field :address, class: "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring" %>
+    </div>
+
+    <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <h2 class="text-sm font-bold uppercase tracking-wide text-slate-700"><%= t("ui.location") %></h2>
+      <p class="mt-1 text-xs text-slate-500"><%= t("settings.location_help") %></p>
+
+      <div class="mt-3 grid gap-4 sm:grid-cols-2">
+        <div>
+          <%= f.label :latitude, class: "mb-1 block text-sm font-semibold text-slate-700" %>
+          <%= f.number_field :latitude, step: :any, min: -90, max: 90, id: "gym-latitude", class: "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring" %>
+        </div>
+        <div>
+          <%= f.label :longitude, class: "mb-1 block text-sm font-semibold text-slate-700" %>
+          <%= f.number_field :longitude, step: :any, min: -180, max: 180, id: "gym-longitude", class: "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring" %>
+        </div>
+      </div>
+
+      <% if maps_api_key.present? %>
+        <div id="gym-map" class="mt-4 h-72 w-full rounded-2xl border border-slate-200"></div>
+      <% else %>
+        <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">
+          <%= t("settings.maps_missing") %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="mt-4">
+      <%= f.label :logo, t("settings.select_logo"), class: "mb-1 block text-sm font-semibold text-slate-700" %>
+      <%= f.file_field :logo, accept: "image/*", class: "block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 file:mr-4 file:rounded-full file:border-0 file:bg-cyan-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-cyan-700 hover:file:bg-cyan-100" %>
+      <% if @gym.logo.attached? %>
+        <div class="mt-3 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+          <%= image_tag @gym.logo, class: "h-12 w-12 rounded-xl object-cover" %>
+          <div>
+            <p class="text-sm font-semibold text-slate-900"><%= t("settings.current_logo") %></p>
+            <p class="text-xs text-slate-500"><%= t("settings.replace_logo") %></p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="mt-6 grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="theme-select" class="mb-1 block text-sm font-semibold text-slate-700"><%= t("ui.theme") %></label>
+        <select id="theme-select" name="theme" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring">
+          <option value="light" <%= "selected" if (cookies[:plannify_theme].presence || "light") == "light" %>><%= t("settings.theme_light") %></option>
+          <option value="dark" <%= "selected" if cookies[:plannify_theme] == "dark" %>><%= t("settings.theme_dark") %></option>
+        </select>
+      </div>
+
+      <div>
+        <label for="locale-select" class="mb-1 block text-sm font-semibold text-slate-700"><%= t("ui.language") %></label>
+        <select id="locale-select" name="locale" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring" data-locale-url="<%= edit_settings_path %>">
+          <% locale_options.each do |label, code| %>
+            <option value="<%= code %>" <%= "selected" if I18n.locale.to_s == code %>><%= label %></option>
+          <% end %>
+        </select>
+      </div>
+
+      <div class="flex items-end">
+        <label class="inline-flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
+          <%= f.check_box :notifications_enabled, class: "h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500" %>
+          <%= t("settings.notifications") %>
+        </label>
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <%= f.submit t("actions.save_settings"), class: "rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700" %>
+    </div>
+  <% end %>
+</section>
+
+<script>
+  (function() {
+    function applyTheme(theme) {
+      var body = document.getElementById("app-shell");
+      if (!body) return;
+      if (theme === "dark") {
+        body.classList.add("theme-dark");
+      } else {
+        body.classList.remove("theme-dark");
+      }
+      localStorage.setItem("plannify-theme", theme);
+      document.cookie = "plannify_theme=" + theme + ";path=/;max-age=31536000;samesite=lax";
+    }
+
+    function bindThemeSelect() {
+      var select = document.getElementById("theme-select");
+      if (!select || select.dataset.bound === "true") return;
+      select.dataset.bound = "true";
+      select.addEventListener("change", function() {
+        applyTheme(select.value);
+      });
+    }
+
+    function bindLocaleSelect() {
+      var select = document.getElementById("locale-select");
+      if (!select || select.dataset.bound === "true") return;
+      select.dataset.bound = "true";
+      select.addEventListener("change", function() {
+        var baseUrl = select.dataset.localeUrl;
+        if (!baseUrl) return;
+        var url = new URL(baseUrl, window.location.origin);
+        url.searchParams.set("locale", select.value);
+        window.location.assign(url.toString());
+      });
+    }
+
+    function toNumber(value) {
+      var number = parseFloat(value);
+      return Number.isNaN(number) ? null : number;
+    }
+
+    function bindGymMap() {
+      if (!window.google || !window.google.maps) return;
+
+      var mapNode = document.getElementById("gym-map");
+      var latInput = document.getElementById("gym-latitude");
+      var lngInput = document.getElementById("gym-longitude");
+      if (!mapNode || !latInput || !lngInput) return;
+      if (mapNode.dataset.bound === "true") return;
+      mapNode.dataset.bound = "true";
+
+      var lat = toNumber(latInput.value);
+      var lng = toNumber(lngInput.value);
+      var center = {
+        lat: lat === null ? 36.8065 : lat,
+        lng: lng === null ? 10.1815 : lng
+      };
+
+      var map = new google.maps.Map(mapNode, {
+        center: center,
+        zoom: (lat === null || lng === null) ? 7 : 15,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true
+      });
+
+      var marker = new google.maps.Marker({
+        map: map,
+        position: center,
+        draggable: true
+      });
+
+      function updateInputs(position) {
+        latInput.value = position.lat().toFixed(6);
+        lngInput.value = position.lng().toFixed(6);
+      }
+
+      map.addListener("click", function(event) {
+        marker.setPosition(event.latLng);
+        updateInputs(event.latLng);
+      });
+
+      marker.addListener("dragend", function(event) {
+        updateInputs(event.latLng);
+      });
+
+      function moveMarkerFromInputs() {
+        var nextLat = toNumber(latInput.value);
+        var nextLng = toNumber(lngInput.value);
+        if (nextLat === null || nextLng === null) return;
+
+        var position = new google.maps.LatLng(nextLat, nextLng);
+        marker.setPosition(position);
+        map.panTo(position);
+      }
+
+      latInput.addEventListener("change", moveMarkerFromInputs);
+      lngInput.addEventListener("change", moveMarkerFromInputs);
+    }
+
+    window.initGymSettingsMap = bindGymMap;
+
+    document.addEventListener("turbo:load", bindThemeSelect);
+    document.addEventListener("turbo:load", bindLocaleSelect);
+    document.addEventListener("turbo:load", bindGymMap);
+    bindThemeSelect();
+    bindLocaleSelect();
+    bindGymMap();
+  })();
+</script>

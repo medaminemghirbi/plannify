@@ -1,0 +1,134 @@
+<% content_for :head do %>
+  <% if current_user.admin? || current_user.superadmin? %>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
+  <% end %>
+<% end %>
+
+<div class="space-y-5">
+  <section class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-3xl font-extrabold tracking-tight text-slate-900"><%= t("planning_sessions.title") %></h1>
+    <% if current_user.coach? || current_user.admin? || current_user.superadmin? %>
+      <%= link_to t("planning_sessions.new_session"), new_planning_session_path, class: "rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600" %>
+    <% end %>
+  </section>
+
+  <% if current_user.admin? || current_user.superadmin? %>
+    <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-lg font-bold text-slate-900"><%= t("planning_sessions.calendar") %></h2>
+        <p class="text-xs text-slate-500"><%= t("planning_sessions.calendar_help") %></p>
+      </div>
+      <div
+        id="planning-calendar"
+        class="rounded-xl border border-slate-100 bg-white p-2"
+        data-events="<%= json_escape(@planning_events.to_json) %>">
+      </div>
+    </section>
+  <% end %>
+
+</div>
+
+<% if current_user.admin? || current_user.superadmin? %>
+  <script>
+    document.addEventListener("turbo:load", function() {
+      var calendarEl = document.getElementById("planning-calendar");
+      if (!calendarEl || typeof FullCalendar === "undefined") return;
+
+      if (calendarEl.dataset.initialized === "true") return;
+      calendarEl.dataset.initialized = "true";
+
+      var events = [];
+      try {
+        events = JSON.parse(calendarEl.dataset.events || "[]");
+      } catch (_) {
+        events = [];
+      }
+
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "dayGridMonth",
+        headerToolbar: {
+          left: "prev,next today",
+          center: "title",
+          right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek"
+        },
+        buttonText: {
+          today: <%= raw json_escape(t("planning_sessions.today").to_json) %>,
+          month: <%= raw json_escape(t("planning_sessions.month").to_json) %>,
+          week: <%= raw json_escape(t("planning_sessions.week").to_json) %>,
+          day: <%= raw json_escape(t("planning_sessions.day").to_json) %>,
+          list: <%= raw json_escape(t("planning_sessions.list").to_json) %>
+        },
+        height: "auto",
+        navLinks: true,
+        nowIndicator: true,
+        editable: true,
+        selectable: false,
+        eventDisplay: "block",
+        events: events,
+        eventDrop: persistEventMove,
+        eventResize: persistEventMove,
+        eventDidMount: function(info) {
+          var coach = (info.event.extendedProps && info.event.extendedProps.coach) || "-";
+          var gym = (info.event.extendedProps && info.event.extendedProps.gym) || "-";
+          info.el.title = info.event.title + "\n<%= j t("ui.gym") %>: " + gym + "\n<%= j t("ui.coach") %>: " + coach;
+        },
+        eventTimeFormat: {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        }
+      });
+
+      function persistEventMove(info) {
+        var event = info.event;
+        if (!event || !event.id) {
+          if (typeof info.revert === "function") info.revert();
+          if (window.showToast) window.showToast(<%= raw json_escape(t("planning_sessions.unable_to_update").to_json) %>, "alert");
+          return;
+        }
+
+        if (!event.end) {
+          if (typeof info.revert === "function") info.revert();
+          if (window.showToast) window.showToast(<%= raw json_escape(t("planning_sessions.end_time_required").to_json) %>, "alert");
+          return;
+        }
+
+        var csrf = document.querySelector("meta[name='csrf-token']");
+
+        fetch("/planning_sessions/" + event.id, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "X-CSRF-Token": csrf ? csrf.getAttribute("content") : ""
+          },
+          body: JSON.stringify({
+            planning_session: {
+              start_time: event.start ? event.start.toISOString() : null,
+              end_time: event.end ? event.end.toISOString() : null
+            }
+          })
+        }).then(function(response) {
+          if (!response.ok) {
+            return response.json().then(function(payload) {
+              var errorMessage = <%= raw json_escape(t("planning_sessions.could_not_move").to_json) %>;
+              if (payload && payload.errors && payload.errors.length > 0) {
+                errorMessage = payload.errors.join(", ");
+              }
+              throw new Error(errorMessage);
+            }).catch(function() {
+              throw new Error(<%= raw json_escape(t("planning_sessions.could_not_move").to_json) %>);
+            });
+          }
+          if (window.showToast) window.showToast(<%= raw json_escape(t("planning_sessions.updated").to_json) %>, "notice");
+        }).catch(function(error) {
+          if (typeof info.revert === "function") info.revert();
+          if (window.showToast) window.showToast(error.message || <%= raw json_escape(t("planning_sessions.update_failed").to_json) %>, "alert");
+        });
+      }
+
+      calendar.render();
+    });
+  </script>
+<% end %>

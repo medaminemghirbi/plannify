@@ -1,0 +1,34 @@
+<div class="mx-auto max-w-3xl space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+  <div class="flex items-start gap-4">
+    <% if @gym.logo.attached? %>
+      <%= image_tag @gym.logo, class: "h-16 w-16 rounded-2xl object-cover ring-1 ring-slate-200" %>
+    <% else %>
+      <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-sm font-bold text-slate-500"><%= t("gyms.placeholder") %></div>
+    <% end %>
+
+    <div class="flex-1">
+      <div class="flex items-start justify-between gap-3">
+        <h1 class="text-3xl font-extrabold tracking-tight text-slate-900"><%= @gym.name %></h1>
+        <%= link_to t("actions.edit"), edit_gym_path(@gym), class: "rounded-full border border-cyan-200 px-4 py-2 text-sm font-semibold text-cyan-700 transition hover:bg-cyan-50" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <article class="rounded-2xl bg-slate-50 p-4">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500"><%= t("gyms.address") %></p>
+      <p class="mt-1 text-sm font-semibold text-slate-800"><%= @gym.address.presence || "-" %></p>
+    </article>
+    <article class="rounded-2xl bg-slate-50 p-4">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500"><%= t("gyms.admin") %></p>
+      <p class="mt-1 text-sm font-semibold text-slate-800"><%= @gym.admin.full_name %></p>
+      <p class="text-xs text-slate-500"><%= @gym.admin.email %></p>
+    </article>
+    <article class="rounded-2xl bg-slate-50 p-4">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500"><%= t("gyms.currency") %></p>
+      <p class="mt-1 text-sm font-semibold text-slate-800"><%= @gym.currency %></p>
+    </article>
+  </div>
+
+  <p><%= link_to t("actions.back"), gyms_path, class: "text-sm font-semibold text-slate-600 transition hover:text-slate-900" %></p>
+</div>

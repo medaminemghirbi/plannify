@@ -1,0 +1,134 @@
+<div class="mx-auto max-w-7xl space-y-6">
+  <section class="rounded-3xl border border-slate-200 bg-white px-5 py-5 shadow-sm sm:px-6">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div class="space-y-2">
+        <div class="inline-flex items-center rounded-full bg-cyan-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
+          <%= t("payments.badge") %>
+        </div>
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight text-slate-900"><%= t("nav.items.payments") %></h1>
+          <p class="mt-1 max-w-2xl text-sm text-slate-500"><%= t("payments.subtitle") %></p>
+          <div class="mt-2 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+            <%= t("payments.currency") %>: <span class="ml-1 font-black text-slate-900"><%= @default_currency %></span>
+          </div>
+        </div>
+      </div>
+
+      <%= link_to t("actions.new_payment"), new_payment_path, class: "inline-flex items-center justify-center rounded-full bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600" %>
+    </div>
+  </section>
+
+  <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <%= form_with url: payments_path, method: :get, local: true, class: "grid gap-4 md:grid-cols-2 xl:grid-cols-5 xl:items-end" do %>
+      <div>
+        <label class="mb-1.5 block text-sm font-semibold text-slate-700"><%= t("payments.month") %></label>
+        <%= select_tag :month, options_for_select([[t("payments.all_months"), ""]] + @month_options, @selected_month), class: "w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring" %>
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-semibold text-slate-700"><%= t("payments.year") %></label>
+        <%= select_tag :year, options_for_select([[t("payments.all_years"), ""]] + @year_options.map { |year| [year, year] }, @selected_year), class: "w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring" %>
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-semibold text-slate-700"><%= t("nav.items.training_groups") %></label>
+        <%= select_tag :group_id, options_for_select([[t("payments.all_groups"), ""]] + @group_options, @selected_group_id), class: "w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring" %>
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-semibold text-slate-700"><%= t("payments.per_page") %></label>
+        <%= select_tag :per_page, options_for_select(PaymentsController::PAGE_SIZES.map { |size| [size, size] }, @selected_page_size), class: "w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none ring-cyan-500 transition focus:border-cyan-500 focus:ring" %>
+      </div>
+
+      <div class="flex flex-wrap gap-2 xl:justify-end">
+        <%= submit_tag t("actions.apply"), class: "inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 whitespace-nowrap" %>
+        <%= link_to t("actions.reset"), payments_path, class: "inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 whitespace-nowrap" %>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500"><%= t("payments.revenue") %></p>
+      <p class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900"><%= format_money(@revenue_total, currency: @default_currency) %></p>
+      <p class="mt-1 text-sm text-slate-500">
+        <%= @selected_month.present? ? I18n.t("date.month_names")[@selected_month.to_i] : t("payments.all_months") %>
+        · <%= @selected_year.present? ? @selected_year : t("payments.all_years") %>
+      </p>
+    </article>
+
+    <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500"><%= t("payments.results") %></p>
+      <p class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900"><%= @payments_count %></p>
+      <p class="mt-1 text-sm text-slate-500"><%= t("payments.showing", count: @payments.length) %></p>
+    </article>
+
+    <article class="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm md:col-span-2 xl:col-span-1">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500"><%= t("payments.view") %></p>
+      <p class="mt-2 text-sm font-semibold text-slate-900"><%= t("payments.filtered") %></p>
+      <p class="mt-1 text-sm text-slate-500"><%= t("payments.filter_hint") %></p>
+    </article>
+  </section>
+
+  <section class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="sticky top-0 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <tr>
+            <th class="px-5 py-4"><%= t("ui.client") %></th>
+            <th class="px-5 py-4"><%= t("ui.gym") %></th>
+            <th class="px-5 py-4"><%= t("ui.amount") %></th>
+            <th class="px-5 py-4"><%= t("payments.period") %></th>
+            <th class="px-5 py-4"><%= t("ui.status") %></th>
+            <th class="px-5 py-4 text-right"><%= t("ui.actions") %></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 bg-white">
+          <% @payments.each do |payment| %>
+            <tr class="hover:bg-slate-50/70">
+              <td class="px-5 py-4 font-semibold text-slate-900"><%= payment.client.full_name %></td>
+              <td class="px-5 py-4 text-slate-600"><%= payment.client.gym&.name || "-" %></td>
+              <% payment_currency = payment.client.gym&.currency || @default_currency %>
+              <td class="px-5 py-4 text-slate-700"><%= format_money(payment.amount, currency: payment_currency) %></td>
+              <td class="px-5 py-4 text-slate-600"><%= payment.starts_on %> to <%= payment.ends_on %> (<%= payment.duration_label %>)</td>
+              <td class="px-5 py-4">
+                <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"><%= payment.status %></span>
+              </td>
+              <td class="px-5 py-4 text-right">
+                <div class="inline-flex flex-nowrap items-center gap-2">
+                  <% if payment.paid? %>
+                    <% if payment.receipt.present? %>
+                      <%= link_to t("payments.receipt"), payment_receipt_path(payment), class: "inline-flex shrink-0 whitespace-nowrap rounded-full border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50" %>
+                    <% else %>
+                      <%= link_to t("actions.generate_receipt"), new_payment_receipt_path(payment), class: "inline-flex shrink-0 whitespace-nowrap rounded-full border border-amber-200 px-3 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-50" %>
+                    <% end %>
+                  <% else %>
+                    <span class="inline-flex shrink-0 whitespace-nowrap rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-400"><%= t("payments.receipt_after_paid") %></span>
+                  <% end %>
+                  <%= link_to t("actions.edit"), edit_payment_path(payment), class: "inline-flex shrink-0 whitespace-nowrap rounded-full border border-cyan-200 px-3 py-1.5 text-xs font-semibold text-cyan-700 transition hover:bg-cyan-50" %>
+                  <%= button_to t("actions.delete"), payment_path(payment), method: :delete, data: { turbo_confirm: t("payments.delete_confirm") }, class: "inline-flex shrink-0 whitespace-nowrap rounded-full border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-50" %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <p class="text-sm text-slate-600">
+      <%= t("payments.page_of", current: @current_page, total: (@total_pages.zero? ? 1 : @total_pages)) %>
+    </p>
+
+    <div class="inline-flex flex-wrap gap-2">
+      <%= link_to t("payments.previous"),
+        payments_path(request.query_parameters.merge(page: @current_page - 1)),
+        class: "inline-flex min-w-24 items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 #{'pointer-events-none opacity-40' if @current_page <= 1}" %>
+
+      <%= link_to t("payments.next"),
+        payments_path(request.query_parameters.merge(page: @current_page + 1)),
+        class: "inline-flex min-w-24 items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 #{'pointer-events-none opacity-40' if @total_pages.zero? || @current_page >= @total_pages}" %>
+    </div>
+  </section>
+</div>

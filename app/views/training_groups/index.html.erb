@@ -1,0 +1,54 @@
+<div class="space-y-5">
+  <section class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-3xl font-extrabold tracking-tight text-slate-900"><%= t("nav.items.training_groups") %></h1>
+    <% if current_user.admin? || current_user.superadmin? %>
+      <%= link_to t("actions.new_group"), new_training_group_path, class: "rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600" %>
+    <% end %>
+  </section>
+
+  <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="bg-slate-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+          <tr>
+            <th class="px-4 py-3"><%= t("ui.name") %></th>
+            <th class="px-4 py-3"><%= t("ui.gym") %></th>
+            <th class="px-4 py-3"><%= t("ui.coach") %></th>
+            <th class="px-4 py-3"><%= t("training_groups.capacity") %></th>
+            <th class="px-4 py-3"><%= t("training_groups.members") %></th>
+            <th class="px-4 py-3"><%= t("ui.actions") %></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <% @training_groups.each do |group| %>
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-3 font-semibold text-slate-900"><%= group.name %></td>
+              <td class="px-4 py-3 text-slate-600"><%= group.gym.name %></td>
+              <td class="px-4 py-3 text-slate-600">
+                <% if group.coach %>
+                  <p class="font-semibold text-slate-800"><%= group.coach.full_name %></p>
+                  <p class="text-xs text-slate-500"><%= group.coach.email %></p>
+                <% else %>
+                  -
+                <% end %>
+              </td>
+              <td class="px-4 py-3 text-slate-600"><%= group.capacity || "-" %></td>
+              <td class="px-4 py-3 text-slate-600">
+                <span class="inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700"><%= group.clients.count %></span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex flex-wrap gap-2">
+                  <%= link_to t("actions.show"), training_group_path(group), class: "rounded-full border border-slate-200 px-3 py-1 font-semibold text-slate-700 transition hover:bg-slate-100" %>
+                  <% if current_user.admin? || current_user.superadmin? %>
+                    <%= link_to t("actions.edit"), edit_training_group_path(group), class: "rounded-full border border-cyan-200 px-3 py-1 font-semibold text-cyan-700 transition hover:bg-cyan-50" %>
+                    <%= button_to t("actions.delete"), training_group_path(group), method: :delete, data: { turbo_confirm: t("training_groups.delete_confirm") }, class: "rounded-full border border-rose-200 px-3 py-1 font-semibold text-rose-700 transition hover:bg-rose-50" %>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
