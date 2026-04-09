@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   end
 
   resources :gyms
+  get "admin-tutorial", to: "admin_tutorials#show", as: :admin_tutorial
   resource :settings, only: [:edit, :update], controller: "settings"
   resources :coaches, only: [:index, :new, :create, :edit, :update, :destroy]
   resources :clients, only: [:index, :new, :create, :edit, :update, :destroy]
@@ -15,6 +16,7 @@ Rails.application.routes.draw do
       delete :remove_member
     end
   end
+  resources :attendances, only: [:index, :new, :create, :edit, :update, :destroy]
   resources :planning_sessions, only: [:index, :new, :create, :edit, :update, :destroy]
   get "statistics", to: "statistics#index"
   resources :payments, only: [:index, :new, :create, :edit, :update, :destroy] do

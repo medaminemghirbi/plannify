@@ -31,6 +31,7 @@ fr:
       documents: "Documents"
   actions:
     settings: "Parametres"
+    tutorial: "Tutoriel"
     sign_out: "Se deconnecter"
     sign_in: "Se connecter"
     sign_up: "S'inscrire"
@@ -291,3 +292,52 @@ fr:
     download: "Telecharger"
     pdf: "PDF"
     delete_confirm: "Supprimer ce document ?"
+  admin_tutorial:
+    badge: "Onboarding admin"
+    title: "Tutoriel nouvel admin"
+    subtitle: "Suivez cette checklist pour lancer rapidement les operations de votre salle et eviter les erreurs de configuration."
+    guided_title: "Mode guide"
+    guided_hint: "Utilisez Precedent / Suivant pour focaliser chaque etape dans l'ordre."
+    previous: "Precedent"
+    next: "Suivant"
+    progress_of: "Etape %{current} sur %{total}"
+    checklist_title: "Votre premiere checklist operationnelle"
+    step_number: "Etape %{number}"
+    pro_tips_title: "Conseils pour un bon demarrage"
+    pro_tips:
+      tip_1: "Creez d'abord les coachs, puis les groupes, puis les clients pour eviter les blocages d'affectation."
+      tip_2: "Utilisez un style de nommage unique pour les groupes (par exemple: Niveau + Horaire)."
+      tip_3: "Generez les recus de paiement seulement apres verification du statut et de la periode."
+    steps:
+      setup_gym:
+        title: "Configurer la salle et l'identite"
+        description: "Ajoutez le nom, l'adresse, la devise, le logo, la localisation sur carte, la langue et les preferences."
+        cta: "Ouvrir parametres"
+      add_coaches:
+        title: "Ajouter les coachs"
+        description: "Creez les profils coach avec contacts pour les affecter aux groupes et aux plannings."
+        cta: "Gerer coachs"
+      add_clients:
+        title: "Ajouter les clients"
+        description: "Inscrivez les clients et affectez-les a la bonne salle avant de planifier les seances."
+        cta: "Gerer clients"
+      create_groups:
+        title: "Creer les groupes d'entraînement"
+        description: "Creez les groupes, fixez la capacite et affectez un coach a chaque groupe."
+        cta: "Ouvrir groupes"
+      plan_sessions:
+        title: "Planifier les seances"
+        description: "Organisez les cours avec heure de debut/fin et structurez le planning hebdomadaire."
+        cta: "Ouvrir planning"
+      track_attendance:
+        title: "Suivre les presences"
+        description: "Enregistrez present/absent pour chaque client afin de suivre l'engagement."
+        cta: "Ouvrir presences"
+      handle_payments:
+        title: "Gerer paiements et recus"
+        description: "Creez les paiements, mettez a jour les statuts et generez les recus pour les abonnements payes."
+        cta: "Ouvrir paiements"
+      upload_documents:
+        title: "Centraliser les documents"
+        description: "Stockez contrats, factures, documents medicaux et fichiers operationnels au meme endroit."
+        cta: "Ouvrir documents"

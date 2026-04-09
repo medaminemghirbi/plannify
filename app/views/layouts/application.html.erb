@@ -278,6 +278,12 @@
 
               <div class="flex items-center gap-2 sm:gap-3">
                 <% if current_user.admin? %>
+                  <% tutorial_active = current_page?(admin_tutorial_path) %>
+                  <%= link_to admin_tutorial_path, class: "admin-surface inline-flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 #{tutorial_active ? 'ring-2 ring-cyan-500 ring-offset-1' : ''} #{!current_user.is_enabled? ? 'opacity-50 cursor-not-allowed' : ''}", data: { disabled: !current_user.is_enabled? }, title: t("actions.tutorial") do %>
+                    <span aria-hidden="true">📘</span>
+                    <span><%= t("actions.tutorial") %></span>
+                  <% end %>
+
                   <% settings_active = current_page?(edit_settings_path) %>
                   <%= link_to edit_settings_path, class: "admin-surface inline-flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 #{settings_active ? 'ring-2 ring-cyan-500 ring-offset-1' : ''} #{!current_user.is_enabled? ? 'opacity-50 cursor-not-allowed' : ''}", data: { disabled: !current_user.is_enabled? }, title: t("actions.settings") do %>
                     <span aria-hidden="true">⚙️</span>

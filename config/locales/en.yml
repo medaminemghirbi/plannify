@@ -60,6 +60,7 @@ en:
       documents: "Documents"
   actions:
     settings: "Settings"
+    tutorial: "Tutorial"
     sign_out: "Sign out"
     sign_in: "Sign in"
     sign_up: "Sign up"
@@ -318,5 +319,54 @@ en:
       invoice: "Invoice"
       other: "Other"
     download: "Download"
+  admin_tutorial:
+    badge: "Admin onboarding"
+    title: "New Admin Tutorial"
+    subtitle: "Follow this checklist to launch your gym operations quickly and avoid setup mistakes."
+    guided_title: "Guided mode"
+    guided_hint: "Use Previous / Next to focus each setup step in order."
+    previous: "Previous"
+    next: "Next"
+    progress_of: "Step %{current} of %{total}"
+    checklist_title: "Your first operational checklist"
+    step_number: "Step %{number}"
+    pro_tips_title: "Pro tips for a smooth start"
+    pro_tips:
+      tip_1: "Create coaches first, then groups, then clients to avoid assignment friction."
+      tip_2: "Use one naming style for groups (for example: Level + Time slot)."
+      tip_3: "Generate payment receipts only after verifying payment status and period dates."
+    steps:
+      setup_gym:
+        title: "Set up gym profile and branding"
+        description: "Add gym name, address, currency, logo, map location, language, and notification preferences."
+        cta: "Open settings"
+      add_coaches:
+        title: "Add your coaches"
+        description: "Create coach profiles with contact details so they can be assigned to groups and schedules."
+        cta: "Manage coaches"
+      add_clients:
+        title: "Register your clients"
+        description: "Add client records and assign each client to the right gym before planning sessions."
+        cta: "Manage clients"
+      create_groups:
+        title: "Create training groups"
+        description: "Create groups, set capacity, and assign a coach to each group."
+        cta: "Open groups"
+      plan_sessions:
+        title: "Plan sessions in calendar"
+        description: "Schedule classes with start and end times and keep the weekly plan organized."
+        cta: "Open planning"
+      track_attendance:
+        title: "Track attendance daily"
+        description: "Record present/absent status for each client to monitor engagement and discipline."
+        cta: "Open attendance"
+      handle_payments:
+        title: "Manage payments and receipts"
+        description: "Create payment entries, update statuses, and generate receipts for paid subscriptions."
+        cta: "Open payments"
+      upload_documents:
+        title: "Store key documents"
+        description: "Upload contracts, invoices, medical documents, and operational files in one place."
+        cta: "Open documents"
     pdf: "PDF"
     delete_confirm: "Delete this document?"
