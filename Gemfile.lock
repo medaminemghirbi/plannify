@@ -329,6 +329,7 @@ DEPENDENCIES
   dotenv-rails
   importmap-rails
   jbuilder
+  matrix
   pg (~> 1.1)
   prawn
   puma (>= 5.0)
