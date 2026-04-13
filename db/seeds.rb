@@ -66,8 +66,12 @@ if gym.nil?
     address: GYM_DATA[:address],
     admin: admin
   )
+else
+  # only assign if admin not already linked elsewhere
+  unless Gym.exists?(admin: admin)
+    gym.update!(admin: admin)
+  end
 end
-
 # =========================
 # OTHER USERS (depend on gym)
 # =========================
